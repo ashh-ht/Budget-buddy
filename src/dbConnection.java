@@ -270,8 +270,8 @@ public class dbConnection {
     }
 
     public boolean login() throws IOException {
-        boolean loginSucess = false;
-        while (!loginSucess) {
+        boolean loginSuccess = false;
+        while (!loginSuccess) {
             Scanner sc = new Scanner(System.in);
             System.out.print("Enter you card number: ");
             String cardNum = sc.nextLine();
@@ -280,10 +280,10 @@ public class dbConnection {
 
             acc.setCardNum(cardNum);
             acc.setCardPin(cardPin);
-            // boolean validCardNum = m.cardNumChecker(cardNum);
-            // if (!validCardNum) {
-            //     continue;
-            // }
+            boolean validCardNum = m.cardNumChecker(cardNum);
+            if (!validCardNum) {
+                continue;
+            }
             boolean existing = checkUser(cardNum, cardPin);
             if (!existing) {
                 continue;
