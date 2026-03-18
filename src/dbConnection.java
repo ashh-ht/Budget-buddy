@@ -10,23 +10,99 @@ public class dbConnection {
     Account acc;
     Methods m;
     Object[] options = { "OK", "CANCEL" };
+
     public dbConnection(Account acc, Methods m) {
         this.acc = acc;
-        this.m = m;    }
+        this.m = m;
+    }
+
     public static Connection getConnection() {
         String url = "jdbc:mysql://localhost:3306/budgetbuddyproject";
         String username = "root";
-        String password = "budgetbuddy-comprog";
+        String password = "";
 
         try {
             return DriverManager.getConnection(url, username, password);
-
         } catch (SQLException e) {
             System.out.println("Connection failed");
             e.printStackTrace();
             return null;
         }
     }
+
+    // --- NEW METHODS ADDED ACCORDING TO SYLVIA'S RULE & ORANGE CHART ---
+
+    // TASK 1: VIEW BALANCE (Format with Equals Signs as requested)
+    public void viewBalanceDetails() {
+        Connection conn = getConnection();
+        PreparedStatement st = null;
+        ResultSet rs = null;
+
+        if (conn == null) return;
+
+        try {
+            // Kinukuha ang total balance mula sa transactions at expiry mula sa card table
+            String query = "SELECT (SELECT SUM(amount) FROM transactions) as total, expiry_date FROM card WHERE card_num = ?";
+            st = conn.prepareStatement(query);
+            st.setString(1, acc.getCardNum());
+            rs = st.executeQuery();
+
+            if (rs.next()) {
+                double total = rs.getDouble("total");
+                String expiry = rs.getString("expiry_date");
+
+                JOptionPane.showMessageDialog(null,
+                        "================ BALANCE ================\n" +
+                        "Card Number: " + acc.getCardNum() + "\n" +
+                        "Expiration Date: " + expiry + "\n" +
+                        "Current Balance: PHP " + total + "\n" +
+                        "=========================================");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (st != null) st.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) { e.printStackTrace(); }
+        }
+    }
+
+    // TASK 5: INSERT CATEGORY (Sync with HeidiSQL columns: id, name, budget)
+    public void insertCategoryToDB(String name, String type, double budgetValue) {
+        Connection conn = getConnection();
+        PreparedStatement st = null;
+
+        if (conn == null) return;
+
+        // Clean name format: "FOOD (Treats)"
+        String formattedName = name.toUpperCase() + " (" + type + ")";
+
+        try {
+            // Saktong columns base sa screenshot mo: name at budget
+            String sql = "INSERT INTO categories (name, budget) VALUES (?, ?)";
+            st = conn.prepareStatement(sql);
+            st.setString(1, formattedName);
+            st.setDouble(2, budgetValue);
+            st.executeUpdate();
+
+            JOptionPane.showMessageDialog(null, 
+                "============= CATEGORY ADDED =============\n" +
+                "Category: " + formattedName + "\n" +
+                "Budget: " + budgetValue + "\n" +
+                "==========================================");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (st != null) st.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) { e.printStackTrace(); }
+        }
+    }
+
+    // --- PRESERVED YOUR ORIGINAL STRUCTURE BELOW ---
 
     public boolean checkExpiry(String cardNum) {
         Connection conn = getConnection();
@@ -80,17 +156,11 @@ public class dbConnection {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            // Close resources
             try {
-                if (rs != null)
-                    rs.close();
-                if (st != null)
-                    st.close();
-                if (conn != null)
-                    conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+                if (rs != null) rs.close();
+                if (st != null) st.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) { e.printStackTrace(); }
         }
         return false;
     }
@@ -158,17 +228,12 @@ public class dbConnection {
             e.printStackTrace();
         } finally {
             try {
-                if (st != null)
-                    st.close();
-                if (conn != null)
-                    conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+                if (st != null) st.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) { e.printStackTrace(); }
         }
     }
 
-    // create new user
     public void register() {
         Scanner sc = new Scanner(System.in);
         Connection conn = getConnection();
@@ -211,13 +276,9 @@ public class dbConnection {
                     e.printStackTrace();
                 } finally {
                     try {
-                        if (st != null)
-                            st.close();
-                        if (conn != null)
-                            conn.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
+                        if (st != null) st.close();
+                        if (conn != null) conn.close();
+                    } catch (SQLException e) { e.printStackTrace(); }
                 }
                 expiryDate(cardNum, cardPin);
                 break;
@@ -227,11 +288,9 @@ public class dbConnection {
                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                         null, options, options[0]);
             }
-
         }
-        
     }
-    
+
     public void expiryDate(String cardNum, String cardPin) {
         Connection conn = getConnection();
         PreparedStatement st = null;
@@ -243,8 +302,8 @@ public class dbConnection {
                     null, options, options[0]);
             return;
         }
-        LocalDateTime date = LocalDateTime.now(); // get the time and date when the user inputted smth
-        LocalDateTime expiryDate = date.plusYears(1); // add 1 yr for expiry date
+        LocalDateTime date = LocalDateTime.now();
+        LocalDateTime expiryDate = date.plusYears(1);
         acc.setExpiryDate(expiryDate);
         System.out.println("Your expiry date is: " + expiryDate.getMonth() + " " + expiryDate.getDayOfMonth() + ", "
                 + expiryDate.getYear());
@@ -259,13 +318,9 @@ public class dbConnection {
             e.printStackTrace();
         } finally {
             try {
-                if (st != null)
-                    st.close();
-                if (conn != null)
-                    conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+                if (st != null) st.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) { e.printStackTrace(); }
         }
     }
 
@@ -303,7 +358,6 @@ public class dbConnection {
         return true;
     }
 
-    //setter for login
     public void LoginDetailsSetter(String cardNum) {
         Connection conn = getConnection();
         PreparedStatement st = null;
@@ -337,12 +391,9 @@ public class dbConnection {
             e.printStackTrace();
         } finally {
             try{
-                if(rs != null)
-                    rs.close();
-                if(st != null)
-                    st.close();
-                if(conn != null);
-                conn.close();
+                if(rs != null) rs.close();
+                if(st != null) st.close();
+                if(conn != null) conn.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
