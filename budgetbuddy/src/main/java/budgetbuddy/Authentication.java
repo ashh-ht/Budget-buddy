@@ -9,8 +9,7 @@ import javax.swing.JOptionPane;
 
 public class Authentication {
    Object[] options = new Object[] { "OK", "CANCEL" };
-   private static HashMap<String, Token> storeToken = new HashMap();
-
+   private static HashMap<String, Token> storeToken = new HashMap<String, Token>();
    private static class Token {
       private final String user;
       private final String token;
