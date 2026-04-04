@@ -62,7 +62,7 @@ public class Methods {
                         }
                         break;
                     }
-                    //break;
+                    break;
                 case 2:
                     //view budget func
                     break;
