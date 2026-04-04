@@ -1,20 +1,24 @@
-package src;
+package budgetbuddy;
 
 import java.time.LocalDateTime;
+
 public class Account {
     private String firstName;
     private String lastName;
     private String cardNum;
     private String cardPin;
     private LocalDateTime expiryDate;
+    private String hash;
 
-    //getters
+    // getters
     public String getFirstName() {
         return this.firstName;
     }
+
     public String getLastName() {
         return this.lastName;
     }
+
     public String getCardNum() {
         return this.cardNum;
     }
@@ -22,11 +26,16 @@ public class Account {
     public String getCardPin() {
         return this.cardPin;
     }
+
     public LocalDateTime getExpiryDate() {
         return this.expiryDate;
     }
 
-    //setters
+    public String getHash() {
+        return this.hash;
+    }
+
+    // setters
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
@@ -45,5 +54,9 @@ public class Account {
 
     public void setExpiryDate(LocalDateTime expiryDate) {
         this.expiryDate = expiryDate;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
     }
 }

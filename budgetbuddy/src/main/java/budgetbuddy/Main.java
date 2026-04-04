@@ -1,4 +1,4 @@
-package src;
+package budgetbuddy;
 
 import javax.swing.*;
 
@@ -9,12 +9,15 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         Account acc = new Account();
-        Methods m = new Methods(acc);
-        dbConnection db = new dbConnection(acc,m);
+        Authentication auth = new Authentication();
+        dbConnection db = new dbConnection(acc, auth);
+        Methods m = new Methods(acc, db, auth);
+
         Scanner sc = new Scanner(System.in);
         String dec = "yes";
         int choice;
         Object[] options = { "OK", "CANCEL" };
+        Object[] options1 = { "BYE", "CANCEL" };
         do{
         //starting menu
             while (true) { //while(true) ensures that the user inputs int not Strings
@@ -40,7 +43,6 @@ public class Main {
                     case 1:
                         db.register();
                         m.MainMenu();
-                        //main menu
                         break;
 
                     case 2:
@@ -60,7 +62,6 @@ public class Main {
                         m.MainMenu();
                         break;
                     case 3:
-                        Object[] options1 = { "BYE", "CANCEL" };
                         JOptionPane.showOptionDialog(null, "Thank you for using your Budget Buddy! Goodbye!",
                                 "SEE YOU! <3",
                                 JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
@@ -76,6 +77,12 @@ public class Main {
                 }
                 System.out.println("Login again? [yes/no]");
                 dec = sc.nextLine();
+                if (dec.equalsIgnoreCase("no") || dec.equalsIgnoreCase("n")) {
+                    JOptionPane.showOptionDialog(null, "Thank you for using your Budget Buddy! Goodbye!",
+                            "SEE YOU! <3",
+                            JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                            null, options1, options1[0]);
+                }
         } while (dec.equalsIgnoreCase("yes") || dec.equalsIgnoreCase("y"));
 
     }

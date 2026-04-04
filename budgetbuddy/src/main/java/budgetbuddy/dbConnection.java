@@ -1,4 +1,4 @@
-package src;
+package budgetbuddy;
 
 import java.io.IOException;
 import java.sql.*;
@@ -8,11 +8,15 @@ import javax.swing.JOptionPane;
 
 public class dbConnection {
     Account acc;
-    Methods m;
-    Object[] options = { "OK", "CANCEL" };
-    public dbConnection(Account acc, Methods m) {
+    Authentication auth;
+
+    public dbConnection(Account acc, Authentication auth) {
         this.acc = acc;
-        this.m = m;    }
+        this.auth = auth;
+    }
+
+    Object[] options = { "OK", "CANCEL" };
+
     public static Connection getConnection() {
         String url = "jdbc:mysql://localhost:3306/budgetbuddyproject";
         String username = "root";
@@ -67,9 +71,9 @@ public class dbConnection {
                     } else {
                         return false;
                     }
-                    
+
                 } else {
-                        JOptionPane.showOptionDialog(null, "Your card is valid." + "\nClick OK to continue",
+                    JOptionPane.showOptionDialog(null, "Your card is not expired yet." + "\nClick OK to continue",
                             "SUCCESS",
                             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                             null, options, options[0]);
@@ -121,7 +125,8 @@ public class dbConnection {
                         null, options, options[0]);
                 return true;
             } else {
-                JOptionPane.showOptionDialog(null, "Invalid card. Please check you card number or card pin." + "\nClick OK to continue",
+                JOptionPane.showOptionDialog(null,
+                        "Invalid card. Please check you card number or card pin." + "\nClick OK to continue",
                         "Warning",
                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                         null, options, options[0]);
@@ -182,7 +187,8 @@ public class dbConnection {
         acc.setLastName(lastName);
         String cardNum = Methods.generateCardNum();
         acc.setCardNum(cardNum);
-        JOptionPane.showOptionDialog(null, "Please save your card number for future uses." + "\nClick OK to continue",
+        JOptionPane.showOptionDialog(null,
+                "Please save your card number for future uses: " + cardNum + "\nClick OK to continue",
                 "SUCCESS",
                 JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                 null, options, options[0]);
@@ -191,21 +197,24 @@ public class dbConnection {
             String cardPin = sc.nextLine();
             if (cardPin.matches("\\d{4}")) {
                 acc.setCardPin(cardPin);
+                acc.setHash(Authentication.hashPin(cardPin));
+                String hashedPin = acc.getHash();
                 System.out.println("Valid pin. Please remember your pin.");
                 if (conn == null) {
-            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
-                    "Warning",
-                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
-                    null, options, options[0]);
+                    JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+                            "Warning",
+                            JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                            null, options, options[0]);
                     return;
                 }
                 try {
                     st = conn.prepareStatement(
-                            "INSERT INTO cardholder (First_name, Last_name, card_num, card_pin) VALUES (?, ?, ?, ?)");
+                            "INSERT INTO cardholder (First_name, Last_name, card_num, card_pin, hash) VALUES (?, ?, ?, ?, ?)");
                     st.setString(1, firstName);
                     st.setString(2, lastName);
                     st.setString(3, cardNum);
                     st.setString(4, cardPin);
+                    st.setString(5, hashedPin);
                     st.executeUpdate();
                 } catch (SQLException e) {
                     e.printStackTrace();
@@ -222,16 +231,17 @@ public class dbConnection {
                 expiryDate(cardNum, cardPin);
                 break;
             } else {
-                JOptionPane.showOptionDialog(null, "Invalid pin. Please enter a 4 digit number." + "\nClick OK to continue",
+                JOptionPane.showOptionDialog(null,
+                        "Invalid pin. Please enter a 4 digit number." + "\nClick OK to continue",
                         "WARNING",
                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                         null, options, options[0]);
             }
 
         }
-        
+
     }
-    
+
     public void expiryDate(String cardNum, String cardPin) {
         Connection conn = getConnection();
         PreparedStatement st = null;
@@ -269,21 +279,78 @@ public class dbConnection {
         }
     }
 
+    public void getHashedPin(String cardNum) {
+        Connection conn = getConnection();
+        PreparedStatement st = null;
+
+        if (conn == null) {
+            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+                    "Warning",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                    null, options, options[0]);
+            return;
+        }
+
+        try{
+            st = conn.prepareStatement("SELECT hash FROM cardholder WHERE card_num = ?");
+            st.setString(1, cardNum);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                String hashedPin = rs.getString("hash");
+                acc.setHash(hashedPin);
+            } else {
+                JOptionPane.showOptionDialog(null,
+                        "Invalid pin. Please check your input and try again." + "\nClick OK to continue",
+                        "Warning",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                        null, options, options[0]);
+                return;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (st != null)
+                    st.close();
+                if (conn != null)
+                    conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        
+    }
+
     public boolean login() throws IOException {
         boolean loginSuccess = false;
         while (!loginSuccess) {
             Scanner sc = new Scanner(System.in);
             System.out.print("Enter you card number: ");
             String cardNum = sc.nextLine();
-            System.out.print("Enter your card pin: ");
-            String cardPin = sc.nextLine();
-
             acc.setCardNum(cardNum);
-            acc.setCardPin(cardPin);
-            boolean validCardNum = m.cardNumChecker(cardNum);
+            boolean validCardNum = cardNumChecker(cardNum);
             if (!validCardNum) {
                 continue;
             }
+            while (true) {
+                System.out.print("Enter your card pin: ");
+                String cardPin = sc.nextLine();
+                acc.setCardPin(cardPin);
+                getHashedPin(cardNum);
+                String hashedPin = acc.getHash();
+                boolean pinValid = Authentication.checkPin(cardPin, hashedPin);
+                if (!pinValid) {
+                    JOptionPane.showOptionDialog(null,
+                            "Invalid pin. Please check your input and try again." + "\nClick OK to continue",
+                            "Warning",
+                            JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                            null, options, options[0]);
+                    continue;
+                }
+                break;
+            }
+            String cardPin = acc.getCardPin();
             boolean existing = checkUser(cardNum, cardPin);
             if (!existing) {
                 continue;
@@ -303,7 +370,25 @@ public class dbConnection {
         return true;
     }
 
-    //setter for login
+    // check if the card is valid or not
+    public boolean cardNumChecker(String cardNum) {
+        long lastDigit = Long.parseLong(cardNum) % 10; // get the last number of the card num
+        long secondLastDigit = (Long.parseLong(cardNum) / 10) % 10; // get the second last number
+        long sum = lastDigit + secondLastDigit; // add the last and second last number
+
+        if (sum == 10) {
+            JOptionPane.showMessageDialog(null, "Valid Card Number!");
+            return true;
+        } else {
+            JOptionPane.showOptionDialog(null,
+                    "Invalid card number. Please check your input and try again" + "\nClick OK to continue", "Warning",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                    null, options, options[0]);
+            return false;
+        }
+    }
+
+    // setter for login
     public void LoginDetailsSetter(String cardNum) {
         Connection conn = getConnection();
         PreparedStatement st = null;
@@ -316,18 +401,20 @@ public class dbConnection {
                     null, options, options[0]);
             return;
         }
-        try{
-            st = conn.prepareStatement("SELECT First_name, Last_name, expiry_date FROM cardholder INNER JOIN card ON cardholder.card_num = card.card_num WHERE cardholder.card_num = ?");
-            st.setString(1,cardNum);
+        try {
+            st = conn.prepareStatement(
+                    "SELECT First_name, Last_name, expiry_date FROM cardholder INNER JOIN card ON cardholder.card_num = card.card_num WHERE cardholder.card_num = ?");
+            st.setString(1, cardNum);
             rs = st.executeQuery();
-            
+
             if (rs.next()) {
                 acc.setFirstName(rs.getString("First_name"));
                 acc.setLastName(rs.getString("Last_name"));
                 Timestamp expiryDate = rs.getTimestamp("expiry_date");
                 acc.setExpiryDate(expiryDate.toLocalDateTime());
             } else {
-                JOptionPane.showOptionDialog(null, "Incorrect card number. Please try again." + "\nClick OK to continue",
+                JOptionPane.showOptionDialog(null,
+                        "Incorrect card number. Please try again." + "\nClick OK to continue",
                         "Warning",
                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                         null, options, options[0]);
@@ -336,12 +423,13 @@ public class dbConnection {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            try{
-                if(rs != null)
+            try {
+                if (rs != null)
                     rs.close();
-                if(st != null)
+                if (st != null)
                     st.close();
-                if(conn != null);
+                if (conn != null)
+                    ;
                 conn.close();
             } catch (SQLException e) {
                 e.printStackTrace();

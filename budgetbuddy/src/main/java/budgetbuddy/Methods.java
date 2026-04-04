@@ -1,4 +1,4 @@
-package src;
+package budgetbuddy;
 
 import java.util.*;
 import javax.swing.JOptionPane;
@@ -7,9 +7,15 @@ import java.time.LocalDateTime;
 public class Methods {
     Object[] options = { "OK", "CANCEL" };
     Account acc;
-    public Methods(Account acc) {
+    Authentication auth;
+    dbConnection db;
+
+    public Methods(Account acc, dbConnection db, Authentication auth) {
         this.acc = acc;
+        this.db = db;
+        this.auth = auth;
     }
+
     public static String generateCardNum() {
         Random random = new Random();
         int[] randomNum = { 19, 28, 37, 46, 55, 64, 73, 82, 91 }; //numbers that adds up to 10 as a card num checker
@@ -26,23 +32,6 @@ public class Methods {
         System.out.print(randomNum[randomIndex]);
         cardNum += randomNum[randomIndex];
         return cardNum;
-    }
-
-    //check if the card is valid or not
-    public boolean cardNumChecker(String cardNum) {
-        long lastDigit = Long.parseLong(cardNum) % 10; //get the last number of the card num
-        long secondLastDigit = (Long.parseLong(cardNum) / 10) % 10; //get the second last number
-        long sum = lastDigit + secondLastDigit; //add the last and second last number
-
-        if (sum == 10) {
-            JOptionPane.showMessageDialog(null, "Valid Card Number!");
-            return true;
-        } else {
-            JOptionPane.showOptionDialog(null, "Invalid card number. Please check your input and try again" + "\nClick OK to continue", "Warning",
-                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
-                    null, options, options[0]);
-            return false;
-        }
     }
 
     //formatting the account details
