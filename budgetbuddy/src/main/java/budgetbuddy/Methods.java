@@ -33,25 +33,12 @@ public class Methods {
         cardNum += randomNum[randomIndex];
         return cardNum;
     }
-
-    //formatting the account details
-    public void AccountDetails() {
-        String firstName = acc.getFirstName();
-        String lastName = acc.getLastName();
-        String cardNum = acc.getCardNum();
-        LocalDateTime expiryDate = acc.getExpiryDate();
-        String name = firstName + " " + lastName;
-        System.out.print("\n\nACCOUNT NAME: " + name);
-        System.out.println("\nCARD NUMBER: " + cardNum);
-        System.out.println("CARD EXPIRATION DATE: " + expiryDate.getMonth() + " " + expiryDate.getDayOfMonth() + ", "
-                + expiryDate.getYear());
-    }
     
     //MAIN MENU SWITCH
     public void MainMenu() {
         Scanner sc = new Scanner(System.in);
         boolean inMainMenu = false;
-        AccountDetails();
+        db.AccountDetails();
 
         while (!inMainMenu) {
             System.out.println("\n========MAIN MENU========");
@@ -68,8 +55,14 @@ public class Methods {
 
             switch (choice) {
                 case 1: 
-                    //view balance func
-                    break;
+                    while (true) {
+                        boolean loggedIn = db.viewBalance();
+                        if (!loggedIn) {
+                            return;
+                        }
+                        break;
+                    }
+                    //break;
                 case 2:
                     //view budget func
                     break;

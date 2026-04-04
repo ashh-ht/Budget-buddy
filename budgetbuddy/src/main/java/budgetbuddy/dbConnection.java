@@ -32,6 +32,19 @@ public class dbConnection {
         }
     }
 
+    // formatting the account details
+    public void AccountDetails() {
+        String firstName = acc.getFirstName();
+        String lastName = acc.getLastName();
+        String cardNum = acc.getCardNum();
+        LocalDateTime expiryDate = acc.getExpiryDate();
+        String name = firstName + " " + lastName;
+        System.out.print("\nACCOUNT NAME: " + name);
+        System.out.println("\nCARD NUMBER: " + cardNum);
+        System.out.println("CARD EXPIRATION DATE: " + expiryDate.getMonth() + " " + expiryDate.getDayOfMonth() + ", "
+                + expiryDate.getYear());
+    }
+
     public boolean checkExpiry(String cardNum) {
         Connection conn = getConnection();
         PreparedStatement st = null;
@@ -187,6 +200,7 @@ public class dbConnection {
         acc.setLastName(lastName);
         String cardNum = Methods.generateCardNum();
         acc.setCardNum(cardNum);
+        auth.Login(cardNum);
         JOptionPane.showOptionDialog(null,
                 "Please save your card number for future uses: " + cardNum + "\nClick OK to continue",
                 "SUCCESS",
@@ -229,6 +243,7 @@ public class dbConnection {
                     }
                 }
                 expiryDate(cardNum, cardPin);
+                createExistingMoney(cardNum);
                 break;
             } else {
                 JOptionPane.showOptionDialog(null,
@@ -329,6 +344,7 @@ public class dbConnection {
             System.out.print("Enter you card number: ");
             String cardNum = sc.nextLine();
             acc.setCardNum(cardNum);
+            auth.Login(cardNum);
             boolean validCardNum = cardNumChecker(cardNum);
             if (!validCardNum) {
                 continue;
@@ -435,5 +451,127 @@ public class dbConnection {
                 e.printStackTrace();
             }
         }
+    }
+
+    //creating data in existingmoney table
+    public void createExistingMoney(String cardNum) {
+        Connection conn = getConnection();
+        PreparedStatement stMoney = null;
+        PreparedStatement stCard = null;
+        ResultSet rs = null;
+
+        if (conn == null) {
+            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+                    "Warning",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                    null, options, options[0]);
+            return;
+        }
+
+        try{
+            conn.setAutoCommit(false);
+
+            //creating column data in existingmoney table
+            stMoney = conn.prepareStatement("INSERT INTO existingmoney (balance, deposit) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS);
+            stMoney.setDouble(1, 0);
+            stMoney.setDouble(2, 0);
+            stMoney.executeUpdate();
+
+            rs = stMoney.getGeneratedKeys();
+            int moneyID = 0;
+            if (rs.next()) {
+                moneyID = rs.getInt(1);
+            }
+
+            //updating the card table
+            stCard = conn.prepareStatement("UPDATE card SET existingmoney_id = ? WHERE card_num = ?");
+            stCard.setInt(1, moneyID);
+            stCard.setString(2, cardNum);
+            stCard.executeUpdate();
+
+            conn.commit();
+        } catch (SQLException e) {
+            try {
+                if (conn != null) {
+                    conn.rollback(); //undo commit if may error
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null)
+                    rs.close();
+                if (stMoney != null)
+                    stMoney.close();
+                if (stCard != null)
+                    stCard.close();
+                if (conn != null)
+                    conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    
+        //view balance
+    public boolean viewBalance() {
+        if(auth.sessionChecker(acc.getCardNum()) == false) {
+            JOptionPane.showOptionDialog(null,
+                         "Your session has expired. Please login again. LOGGING OUT..." + "\nClick OK to continue",
+                         "Warning",
+                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                         null, options, options[0]);
+            return false;
+        }
+        else {
+            Connection conn = getConnection();
+            PreparedStatement st = null;
+            ResultSet rs = null;
+
+            if (conn == null) {
+                JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+                        "Warning",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                        null, options, options[0]);
+                return false;
+            }
+
+            try {
+                st = conn.prepareStatement(
+                        "SELECT em.balance FROM existingmoney em JOIN card c ON em.id = c.existingmoney_id WHERE card_num = ?");
+                st.setString(1, acc.getCardNum());
+                rs = st.executeQuery();
+                if (rs.next()) {
+                    double balance = rs.getDouble("balance");
+                    System.out.println("\n========BALANCE========");
+                    AccountDetails();
+                    System.out.printf("BALANCE: PHP %.2f%n", balance);
+                } else {
+                    JOptionPane.showOptionDialog(null,
+                            "Failed to retrieve balance. Please try again." + "\nClick OK to continue",
+                            "Warning",
+                            JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                            null, options, options[0]);
+                    return false;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (rs != null)
+                        rs.close();
+                    if (st != null)
+                        st.close();
+                    if (conn != null)
+                        conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return true;
     }
 }

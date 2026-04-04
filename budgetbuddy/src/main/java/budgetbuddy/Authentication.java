@@ -42,7 +42,7 @@ public class Authentication {
       LocalDateTime now = LocalDateTime.now();
       LocalDateTime expiry = now.plusMinutes(30L);
       Token token = new Token(user, tokenString, now, expiry);
-      storeToken.put(tokenString, token);
+      storeToken.put(user, token);
       JOptionPane.showMessageDialog(null,
             "Login Time: " + now.getMonth() + " " + now.getDayOfMonth() + ", " + now.getYear() + " " + now.getHour() + ":"
                   + now.getMinute() + "\n\nYour session will expire in: " + expiry.getMonth() + " "
@@ -52,11 +52,11 @@ public class Authentication {
    }
 
    public String Login(String user) {
-      return this.createToken(user);
+      return createToken(user);
    }
 
    public boolean sessionChecker(String user) {
-      Token token = (Token) storeToken.get(user);
+      Token token = storeToken.get(user);
       if (token == null) {
          JOptionPane.showOptionDialog(null, "No token.\nClick OK to continue", "WARNING", -1, 2, (Icon) null,
                this.options, this.options[0]);
