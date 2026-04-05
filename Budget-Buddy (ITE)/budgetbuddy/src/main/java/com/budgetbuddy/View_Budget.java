@@ -7,9 +7,9 @@ import javax.swing.JTextArea;
 
 public class ViewBudget {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/BudgetDB";
+    private static final String URL = "jdbc:mysql://localhost:3306/budgetbuddyproject";
     private static final String USER = "root"; 
-    private static final String PASS = ""; 
+    private static final String PASS = "budgetbuddy-comprog"; 
 
     public static class Transaction {
         public String category;
@@ -32,6 +32,11 @@ public class ViewBudget {
     }
 
     public static void main(String[] args) {
+        if (Session.getCurrentUser() == null) {
+            JOptionPane.showMessageDialog(null, "Access Denied. Please log in to manage your budget.", "Session Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
+        }
+
         List<BudgetGoal> goals = new ArrayList<>();
         List<Transaction> trans = new ArrayList<>();
         ViewBudget service = new ViewBudget();
@@ -109,7 +114,7 @@ public class ViewBudget {
             if (choice == 0) {
                 String name = JOptionPane.showInputDialog("Enter New Category Name:");
                 if (name != null && !name.trim().isEmpty()) {
-                    String limitStr = JOptionPane.showInputDialog("Enter Limit for " + name + ":");
+                    String limitStr = JOptionPane.showInputDialog("Enter Limit for " + name + " (PHP):");
                     if (limitStr == null) continue;
                     try {
                         double limit = Double.parseDouble(limitStr);
@@ -125,7 +130,7 @@ public class ViewBudget {
                 String selected = (String) JOptionPane.showInputDialog(null, "Select Category:", "Add Spending",
                         JOptionPane.QUESTION_MESSAGE, null, categoryNames, categoryNames[0]);
                 if (selected != null) {
-                    String spentStr = JOptionPane.showInputDialog("Amount spent on " + selected + ":");
+                    String spentStr = JOptionPane.showInputDialog("Amount spent on " + selected + " (PHP):");
                     if (spentStr == null) continue;
                     try {
                         double spent = Double.parseDouble(spentStr);
@@ -141,10 +146,9 @@ public class ViewBudget {
 
     public void viewOverallBudget(List<Transaction> transactions, List<BudgetGoal> goals) {
         StringBuilder tableReport = new StringBuilder();
-        tableReport.append("BUDGET REPORT\n");
-        tableReport.append("============================================================\n");
-        tableReport.append(String.format("%-20s | %-12s | %-10s | %-10s\n", "Category", "Limit", "Spent", "Remaining"));
-        tableReport.append("------------------------------------------------------------\n");
+        tableReport.append("========== VIEW BUDGET ==========\n\n");
+        tableReport.append(String.format("%-20s | %-15s | %-12s | %-12s\n", "Category", "Limit", "Spent", "Remaining"));
+        tableReport.append("----------------------------------------------------------------------\n");
 
         double totalLimit = 0, totalSpent = 0;
         boolean hasLowBalance = false;
@@ -160,7 +164,7 @@ public class ViewBudget {
             totalSpent += spent;
             String icon = getCategoryIcon(goal.category);
 
-            tableReport.append(String.format("%-20s | ₱%-11.2f | ₱%-9.2f | ₱%-9.2f\n",
+            tableReport.append(String.format("%-20s | PHP%-12.2f | PHP%-9.2f | PHP%-9.2f\n",
                     icon + " " + goal.category, goal.totalLimit, spent, remaining));
 
             if (remaining <= 100) {
@@ -168,28 +172,44 @@ public class ViewBudget {
                 categoryAlerts.append("<html><font color='red'>⚠️ ")
                         .append(icon).append(" ")
                         .append(goal.category)
-                        .append(": ₱")
+                        .append(": PHP ")
                         .append(String.format("%.2f", remaining))
                         .append(" LEFT</font></html><br>");
             }
         }
 
-        tableReport.append("============================================================\n");
-        tableReport.append(String.format("TOTAL                | ₱%-11.2f | ₱%-9.2f | ₱%-9.2f\n",
-                totalLimit, totalSpent, (totalLimit - totalSpent)));
+        tableReport.append("======================================================================\n");
+        tableReport.append(String.format("%-20s | PHP%-12.2f | PHP%-9.2f | PHP%-9.2f\n",
+                "TOTAL", totalLimit, totalSpent, (totalLimit - totalSpent)));
 
         if (hasLowBalance) {
-            String redWarning = "<html><font color='red'>⚠️ WARNING: Some categories have low balance (₱100 or less).</font></html>";
+            String redWarning = "<html><font color='red'>⚠️ WARNING: Some categories have low balance (PHP 100 or less).</font></html>";
             JOptionPane.showMessageDialog(null, redWarning, "CAUTION", JOptionPane.WARNING_MESSAGE);
         }
 
         JTextArea area = new JTextArea(tableReport.toString());
-        area.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        area.setFont(new Font("Monospaced", Font.PLAIN, 12));
         area.setEditable(false);
         JOptionPane.showMessageDialog(null, area, "Final Report", JOptionPane.INFORMATION_MESSAGE);
 
         if (hasLowBalance) {
             JOptionPane.showMessageDialog(null, categoryAlerts.toString(), "Low Balance Alerts", JOptionPane.ERROR_MESSAGE);
         }
+    }
+}
+
+class Session {
+    private static String currentUser = null;
+
+    public static void login(String username) {
+        currentUser = username;
+    }
+
+    public static void logout() {
+        currentUser = null;
+    }
+
+    public static String getCurrentUser() {
+        return currentUser;
     }
 }

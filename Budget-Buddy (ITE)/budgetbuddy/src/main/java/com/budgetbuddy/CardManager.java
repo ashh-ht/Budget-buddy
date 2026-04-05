@@ -1,4 +1,4 @@
-package Card_Details;
+package src;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,7 +10,7 @@ public class CardManager {
 
     private final String url = "jdbc:mysql://localhost:3306/budgetbuddyproject";
     private final String user = "root";
-    private final String password = "";
+    private final String password = "budgetbuddy-comprog";
 
     public void updateCardDetails(String oldCardNum, String newCardNum, String newPin) {
         String sql = "UPDATE card SET card_num = ?, card_pin = ? WHERE card_num = ?";
