@@ -39,6 +39,7 @@ public class dbConnection {
         String cardNum = acc.getCardNum();
         LocalDateTime expiryDate = acc.getExpiryDate();
         String name = firstName + " " + lastName;
+        System.out.println("\n==========ACCOUNT DETAILS==========");
         System.out.print("\nACCOUNT NAME: " + name);
         System.out.println("\nCARD NUMBER: " + cardNum);
         System.out.println("CARD EXPIRATION DATE: " + expiryDate.getMonth() + " " + expiryDate.getDayOfMonth() + ", "
@@ -202,7 +203,7 @@ public class dbConnection {
         acc.setCardNum(cardNum);
         auth.Login(cardNum);
         JOptionPane.showOptionDialog(null,
-                "Please save your card number for future uses: " + cardNum + "\nClick OK to continue",
+                "Please save your card number for future uses: \n" + cardNum + "\nClick OK to continue",
                 "SUCCESS",
                 JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                 null, options, options[0]);
@@ -306,7 +307,7 @@ public class dbConnection {
             return;
         }
 
-        try{
+        try {
             st = conn.prepareStatement("SELECT hash FROM cardholder WHERE card_num = ?");
             st.setString(1, cardNum);
             ResultSet rs = st.executeQuery();
@@ -333,8 +334,7 @@ public class dbConnection {
                 e.printStackTrace();
             }
         }
-        
-        
+
     }
 
     public boolean login() throws IOException {
@@ -453,7 +453,7 @@ public class dbConnection {
         }
     }
 
-    //creating data in existingmoney table
+    // creating data in existingmoney table
     public void createExistingMoney(String cardNum) {
         Connection conn = getConnection();
         PreparedStatement stMoney = null;
@@ -468,11 +468,12 @@ public class dbConnection {
             return;
         }
 
-        try{
+        try {
             conn.setAutoCommit(false);
 
-            //creating column data in existingmoney table
-            stMoney = conn.prepareStatement("INSERT INTO existingmoney (balance, deposit) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS);
+            // creating column data in existingmoney table
+            stMoney = conn.prepareStatement("INSERT INTO existingmoney (balance, deposit) VALUES (?, ?)",
+                    Statement.RETURN_GENERATED_KEYS);
             stMoney.setDouble(1, 0);
             stMoney.setDouble(2, 0);
             stMoney.executeUpdate();
@@ -483,7 +484,7 @@ public class dbConnection {
                 moneyID = rs.getInt(1);
             }
 
-            //updating the card table
+            // updating the card table
             stCard = conn.prepareStatement("UPDATE card SET existingmoney_id = ? WHERE card_num = ?");
             stCard.setInt(1, moneyID);
             stCard.setString(2, cardNum);
@@ -493,7 +494,7 @@ public class dbConnection {
         } catch (SQLException e) {
             try {
                 if (conn != null) {
-                    conn.rollback(); //undo commit if may error
+                    conn.rollback(); // undo commit if may error
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();
@@ -515,18 +516,16 @@ public class dbConnection {
         }
     }
 
-    
-        //view balance
+    // view balance
     public boolean viewBalance() {
-        if(auth.sessionChecker(acc.getCardNum()) == false) {
+        if (auth.sessionChecker(acc.getCardNum()) == false) {
             JOptionPane.showOptionDialog(null,
-                         "Your session has expired. Please login again. LOGGING OUT..." + "\nClick OK to continue",
-                         "Warning",
-                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
-                         null, options, options[0]);
+                    "Your session has expired. Please login again. LOGGING OUT..." + "\nClick OK to continue",
+                    "Warning",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                    null, options, options[0]);
             return false;
-        }
-        else {
+        } else {
             Connection conn = getConnection();
             PreparedStatement st = null;
             ResultSet rs = null;
@@ -546,7 +545,7 @@ public class dbConnection {
                 rs = st.executeQuery();
                 if (rs.next()) {
                     double balance = rs.getDouble("balance");
-                    System.out.println("\n========BALANCE========");
+                    System.out.println("\n==========BALANCE==========");
                     AccountDetails();
                     System.out.printf("BALANCE: PHP %.2f%n", balance);
                 } else {
@@ -571,6 +570,138 @@ public class dbConnection {
                     e.printStackTrace();
                 }
             }
+        }
+        return true;
+    }
+
+    // add category
+    public void addCateg(String cardNum) {
+        Scanner sc = new Scanner(System.in);
+        Connection conn = getConnection();
+
+        System.out.print("Enter category name(eg. Food, Allowance, etc.): ");
+        String category = sc.nextLine();
+        System.out.print("Enter estimated category budget for one day: ");
+        double budget = sc.nextDouble();
+
+        try (PreparedStatement st1 = conn.prepareStatement("SELECT id FROM card WHERE card_num = ?")) {
+            st1.setString(1, cardNum); // getting card id first
+            ResultSet rs = st1.executeQuery();
+            int cardId = -1;
+            if (rs.next()) {
+                cardId = rs.getInt("id");
+            } else {
+                JOptionPane.showOptionDialog(null,
+                        "Card not found! Please try again." + "\nClick OK to continue",
+                        "Warning",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                        null, options, options[0]);
+                return;
+            }
+
+            PreparedStatement st2 = conn
+                    .prepareStatement("INSERT INTO categories (name, budget, card_id) VALUES (?, ?, ?)");
+            st2.setString(1, category);
+            st2.setDouble(2, budget);
+            st2.setLong(3, cardId);
+            st2.executeUpdate();
+
+            JOptionPane.showOptionDialog(null,
+                    "Category " + category + " has been added successfully!" + "\nClick OK to continue",
+                    "Success",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                    null, options, options[0]);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    // getting boolean value for first time user
+    public boolean isFirstTime(String cardNum) {
+        Connection conn = getConnection();
+
+        if (conn == null) {
+            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+                    "Warning",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                    null, options, options[0]);
+            return false;
+        }
+
+        try (PreparedStatement st = conn.prepareStatement("SELECT first_time FROM cardholder WHERE card_num = ?")) {
+            st.setString(1, cardNum);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getBoolean("first_time");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+
+    public void setFirstTime(String cardNum) {
+        Connection conn = getConnection();
+
+        if (conn == null) {
+            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+                    "Warning",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                    null, options, options[0]);
+            return;
+        }
+
+        try (PreparedStatement st = conn.prepareStatement("UPDATE cardholder SET first_time = 0 WHERE card_num = ?")) {
+            st.setString(1, cardNum);
+            st.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // add budget category flow
+    public boolean addCategFlow() {
+        if (auth.sessionChecker(acc.getCardNum()) == false) {
+            JOptionPane.showOptionDialog(null,
+                    "Your session has expired. Please login again. LOGGING OUT..." + "\nClick OK to continue",
+                    "Warning",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                    null, options, options[0]);
+            return false;
+        }
+        else {
+            Scanner sc = new Scanner(System.in);
+            boolean firstTime = isFirstTime(acc.getCardNum());
+            while (true) {
+
+                if (firstTime) {
+                    System.out.println("\n==========ADD BUDGET CATEGORY==========");
+                    System.out.println(
+                            "New users are required to add two budget categories to help you manage your money better!\n");
+                    addCateg(acc.getCardNum());
+                    addCateg(acc.getCardNum());
+                    setFirstTime(acc.getCardNum());
+                    firstTime = false;
+                } else {
+                    System.out.println("\n==========ADD BUDGET CATEGORY==========");
+                    addCateg(acc.getCardNum());
+                }
+                System.out.println("Do you want to add another category? (yes/no)");
+                String choice = sc.nextLine();
+                
+                if (choice.equalsIgnoreCase("no") || choice.equalsIgnoreCase("n")) {
+                    JOptionPane.showOptionDialog(null,
+                            "Returning to main menu." + "\nClick OK to continue",
+                            "Information",
+                            JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                            null, options, options[0]);
+                    break;
+                }
+            }
+
         }
         return true;
     }

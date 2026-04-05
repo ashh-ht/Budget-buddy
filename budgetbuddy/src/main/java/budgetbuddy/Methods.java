@@ -40,7 +40,7 @@ public class Methods {
         db.AccountDetails();
 
         while (!inMainMenu) {
-            System.out.println("\n========MAIN MENU========");
+            System.out.println("\n==========MAIN MENU==========");
             System.out.println("1. View Balance");
             System.out.println("2. View Budget");
             System.out.println("3. Deposit Cash");
@@ -51,11 +51,11 @@ public class Methods {
             System.out.print("\nPick from the following: ");
             int choice = sc.nextInt();
             sc.nextLine();//clears buffer
-
+            boolean loggedIn = false;
             switch (choice) {
                 case 1: 
                     while (true) {
-                        boolean loggedIn = db.viewBalance();
+                        loggedIn = db.viewBalance();
                         if (!loggedIn) {
                             return;
                         }
@@ -72,7 +72,13 @@ public class Methods {
                     //view finan log
                     break;
                 case 5:
-                    //insert bud categ
+                    while(true) {
+                        loggedIn = db.addCategFlow();
+                        if (!loggedIn) {
+                            return;
+                        }
+                        break;
+                    }
                     break;
                 case 6:
                     //update database details
@@ -81,7 +87,6 @@ public class Methods {
                     inMainMenu = true;
                     break;
                 default:
-    
                     JOptionPane.showOptionDialog(null,
                             "Invalid number. Please try again" + "\nClick OK to continue", "Warning",
                             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
