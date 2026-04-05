@@ -1,0 +1,51 @@
+CREATE DATABASE IF NOT EXISTS `budgetbuddyproject`;
+USE `budgetbuddyproject`;
+
+CREATE TABLE IF NOT EXISTS `categories` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `budget` double NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `existing_money` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `balance` double NOT NULL DEFAULT 0,
+  `deposit` double DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `cardholder` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(255) NOT NULL,
+  `last_name` varchar(255) NOT NULL,
+  `card_num` varchar(16) NOT NULL,
+  `card_pin` varchar(4) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_card_num_unique` (`card_num`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `card` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `card_num` varchar(16) NOT NULL,
+  `card_pin` varchar(4) NOT NULL,
+  `expiry_date` timestamp NOT NULL,
+  `existing_money_id` bigint unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_card_num_ref` (`card_num`),
+  CONSTRAINT `FK_card_cardholder` FOREIGN KEY (`card_num`) REFERENCES `cardholder` (`card_num`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_card_existingmoney` FOREIGN KEY (`existing_money_id`) REFERENCES `existing_money` (`id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `expenses` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `category_id` bigint unsigned DEFAULT NULL,
+  `card_id` bigint unsigned NOT NULL,
+  `price` double NOT NULL DEFAULT 0,
+  `task` varchar(255) NOT NULL COMMENT 'Description of expense',
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('essentials','treats') NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `FK_expenses_card` FOREIGN KEY (`card_id`) REFERENCES `card` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `FK_expenses_categories` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
