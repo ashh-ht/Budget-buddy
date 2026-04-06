@@ -1,4 +1,4 @@
-package budgetbuddy.src.main.java.budgetbuddy;
+package Budgetbuddy;
 
 import org.mindrot.jbcrypt.BCrypt;
 import java.time.LocalDateTime;
