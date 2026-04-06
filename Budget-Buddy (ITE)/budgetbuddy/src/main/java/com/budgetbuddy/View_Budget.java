@@ -1,11 +1,18 @@
+package com.budgetbuddy;
+
 import java.awt.Font;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
-public class ViewBudget {
+public class View_Budget {
 
     private static final String URL = "jdbc:mysql://localhost:3306/budgetbuddyproject";
     private static final String USER = "root"; 
@@ -33,13 +40,13 @@ public class ViewBudget {
 
     public static void main(String[] args) {
         if (Session.getCurrentUser() == null) {
-            JOptionPane.showMessageDialog(null, "Access Denied. Please log in to manage your budget.", "Session Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Access Denied. Please log in.", "Session Error", JOptionPane.ERROR_MESSAGE);
             System.exit(0);
         }
 
         List<BudgetGoal> goals = new ArrayList<>();
         List<Transaction> trans = new ArrayList<>();
-        ViewBudget service = new ViewBudget();
+        View_Budget service = new View_Budget();
 
         service.loadData(goals, trans);
         service.manageCategories(goals, trans);
@@ -47,96 +54,87 @@ public class ViewBudget {
         if (!goals.isEmpty()) {
             service.saveData(goals, trans);
             service.viewOverallBudget(trans, goals);
-        } else {
-            JOptionPane.showMessageDialog(null, "No categories were created.");
         }
 
         System.exit(0);
     }
 
     private void loadData(List<BudgetGoal> goals, List<Transaction> trans) {
+        String currentUser = Session.getCurrentUser();
+        String goalSql = "SELECT category_name, total_limit FROM BudgetGoals WHERE username = ?";
+        String transSql = "SELECT category_name, amount FROM Transactions WHERE username = ?";
+
         try (Connection conn = DriverManager.getConnection(URL, USER, PASS)) {
-            ResultSet rsGoals = conn.createStatement().executeQuery("SELECT * FROM BudgetGoals");
-            while (rsGoals.next()) {
-                goals.add(new BudgetGoal(rsGoals.getString("category_name"), rsGoals.getDouble("total_limit")));
+            try (PreparedStatement ps = conn.prepareStatement(goalSql)) {
+                ps.setString(1, currentUser);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    goals.add(new BudgetGoal(rs.getString("category_name"), rs.getDouble("total_limit")));
+                }
             }
-            ResultSet rsTrans = conn.createStatement().executeQuery("SELECT * FROM Transactions");
-            while (rsTrans.next()) {
-                trans.add(new Transaction(rsTrans.getString("category_name"), rsTrans.getDouble("amount")));
+            try (PreparedStatement ps = conn.prepareStatement(transSql)) {
+                ps.setString(1, currentUser);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    trans.add(new Transaction(rs.getString("category_name"), rs.getDouble("amount")));
+                }
             }
-        } catch (SQLException e) {
-        }
+        } catch (SQLException e) {}
     }
 
     private void saveData(List<BudgetGoal> goals, List<Transaction> trans) {
+        String currentUser = Session.getCurrentUser();
         try (Connection conn = DriverManager.getConnection(URL, USER, PASS)) {
-            conn.createStatement().executeUpdate("DELETE FROM Transactions");
-            conn.createStatement().executeUpdate("DELETE FROM BudgetGoals");
+            PreparedStatement delT = conn.prepareStatement("DELETE FROM Transactions WHERE username = ?");
+            delT.setString(1, currentUser);
+            delT.executeUpdate();
 
-            PreparedStatement psGoal = conn.prepareStatement("INSERT INTO BudgetGoals (category_name, total_limit) VALUES (?, ?)");
+            PreparedStatement delG = conn.prepareStatement("DELETE FROM BudgetGoals WHERE username = ?");
+            delG.setString(1, currentUser);
+            delG.executeUpdate();
+
+            PreparedStatement psGoal = conn.prepareStatement("INSERT INTO BudgetGoals (category_name, total_limit, username) VALUES (?, ?, ?)");
             for (BudgetGoal g : goals) {
                 psGoal.setString(1, g.category);
                 psGoal.setDouble(2, g.totalLimit);
+                psGoal.setString(3, currentUser);
                 psGoal.executeUpdate();
             }
 
-            PreparedStatement psTrans = conn.prepareStatement("INSERT INTO Transactions (category_name, amount) VALUES (?, ?)");
+            PreparedStatement psTrans = conn.prepareStatement("INSERT INTO Transactions (category_name, amount, username) VALUES (?, ?, ?)");
             for (Transaction t : trans) {
                 psTrans.setString(1, t.category);
                 psTrans.setDouble(2, t.amount);
+                psTrans.setString(3, currentUser);
                 psTrans.executeUpdate();
             }
-        } catch (SQLException e) {
-        }
-    }
-
-    private String getCategoryIcon(String category) {
-        String lower = category.toLowerCase();
-        if (lower.contains("food")) return "🍔";
-        if (lower.contains("transport")) return "🚌";
-        if (lower.contains("grocery") || lower.contains("shopping")) return "🛒";
-        if (lower.contains("essential")) return "📦";
-        if (lower.contains("school") || lower.contains("supplies")) return "✏️";
-        if (lower.contains("tuition") || lower.contains("education")) return "🎓";
-        if (lower.contains("utility")) return "💡";
-        if (lower.contains("health")) return "💊";
-        if (lower.contains("entertainment")) return "🎮";
-        return "📌";
+        } catch (SQLException e) {}
     }
 
     public void manageCategories(List<BudgetGoal> goals, List<Transaction> transactions) {
         boolean running = true;
         while (running) {
-            String[] options = {"Add New Category", "Add Spending", "Finish & View Report"};
-            int choice = JOptionPane.showOptionDialog(null, "Select an action:", "Budget Manager",
-                    JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+            String[] options = {"Add Category", "Add Spending", "View Report"};
+            int choice = JOptionPane.showOptionDialog(null, "User: " + Session.getCurrentUser(), "Budget Buddy",
+                    0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
 
             if (choice == 0) {
-                String name = JOptionPane.showInputDialog("Enter New Category Name:");
+                String name = JOptionPane.showInputDialog("Category Name:");
                 if (name != null && !name.trim().isEmpty()) {
-                    String limitStr = JOptionPane.showInputDialog("Enter Limit for " + name + " (PHP):");
-                    if (limitStr == null) continue;
+                    String lim = JOptionPane.showInputDialog("Limit (PHP):");
                     try {
-                        double limit = Double.parseDouble(limitStr);
-                        goals.add(new BudgetGoal(name.trim(), limit));
-                    } catch (NumberFormatException e) {
-                    }
+                        goals.add(new BudgetGoal(name.trim(), Double.parseDouble(lim)));
+                    } catch (Exception e) {}
                 }
             } else if (choice == 1) {
                 if (goals.isEmpty()) continue;
-                String[] categoryNames = new String[goals.size()];
-                for (int i = 0; i < goals.size(); i++) categoryNames[i] = goals.get(i).category;
-                
-                String selected = (String) JOptionPane.showInputDialog(null, "Select Category:", "Add Spending",
-                        JOptionPane.QUESTION_MESSAGE, null, categoryNames, categoryNames[0]);
-                if (selected != null) {
-                    String spentStr = JOptionPane.showInputDialog("Amount spent on " + selected + " (PHP):");
-                    if (spentStr == null) continue;
+                String[] names = goals.stream().map(g -> g.category).toArray(String[]::new);
+                String sel = (String) JOptionPane.showInputDialog(null, "Category:", "Spending", 3, null, names, names[0]);
+                if (sel != null) {
+                    String amt = JOptionPane.showInputDialog("Amount (PHP):");
                     try {
-                        double spent = Double.parseDouble(spentStr);
-                        transactions.add(new Transaction(selected, spent));
-                    } catch (NumberFormatException e) {
-                    }
+                        transactions.add(new Transaction(sel, Double.parseDouble(amt)));
+                    } catch (Exception e) {}
                 }
             } else {
                 running = false;
@@ -145,71 +143,24 @@ public class ViewBudget {
     }
 
     public void viewOverallBudget(List<Transaction> transactions, List<BudgetGoal> goals) {
-        StringBuilder tableReport = new StringBuilder();
-        tableReport.append("========== VIEW BUDGET ==========\n\n");
-        tableReport.append(String.format("%-20s | %-15s | %-12s | %-12s\n", "Category", "Limit", "Spent", "Remaining"));
-        tableReport.append("----------------------------------------------------------------------\n");
-
-        double totalLimit = 0, totalSpent = 0;
-        boolean hasLowBalance = false;
-        StringBuilder categoryAlerts = new StringBuilder();
-
-        for (BudgetGoal goal : goals) {
-            double spent = 0;
-            for (Transaction t : transactions) {
-                if (t.category.equalsIgnoreCase(goal.category)) spent += t.amount;
-            }
-            double remaining = goal.totalLimit - spent;
-            totalLimit += goal.totalLimit;
-            totalSpent += spent;
-            String icon = getCategoryIcon(goal.category);
-
-            tableReport.append(String.format("%-20s | PHP%-12.2f | PHP%-9.2f | PHP%-9.2f\n",
-                    icon + " " + goal.category, goal.totalLimit, spent, remaining));
-
-            if (remaining <= 100) {
-                hasLowBalance = true;
-                categoryAlerts.append("<html><font color='red'>⚠️ ")
-                        .append(icon).append(" ")
-                        .append(goal.category)
-                        .append(": PHP ")
-                        .append(String.format("%.2f", remaining))
-                        .append(" LEFT</font></html><br>");
-            }
+        StringBuilder sb = new StringBuilder("BUDGET REPORT: " + Session.getCurrentUser() + "\n\n");
+        sb.append(String.format("%-20s | %-12s | %-12s\n", "Category", "Limit", "Spent"));
+        for (BudgetGoal g : goals) {
+            double s = transactions.stream()
+                                   .filter(t -> t.category.equals(g.category))
+                                   .mapToDouble(t -> t.amount)
+                                   .sum();
+            sb.append(String.format("%-20s | PHP%-9.2f | PHP%-9.2f\n", g.category, g.totalLimit, s));
         }
-
-        tableReport.append("======================================================================\n");
-        tableReport.append(String.format("%-20s | PHP%-12.2f | PHP%-9.2f | PHP%-9.2f\n",
-                "TOTAL", totalLimit, totalSpent, (totalLimit - totalSpent)));
-
-        if (hasLowBalance) {
-            String redWarning = "<html><font color='red'>⚠️ WARNING: Some categories have low balance (PHP 100 or less).</font></html>";
-            JOptionPane.showMessageDialog(null, redWarning, "CAUTION", JOptionPane.WARNING_MESSAGE);
-        }
-
-        JTextArea area = new JTextArea(tableReport.toString());
-        area.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        area.setEditable(false);
-        JOptionPane.showMessageDialog(null, area, "Final Report", JOptionPane.INFORMATION_MESSAGE);
-
-        if (hasLowBalance) {
-            JOptionPane.showMessageDialog(null, categoryAlerts.toString(), "Low Balance Alerts", JOptionPane.ERROR_MESSAGE);
-        }
+        JTextArea txt = new JTextArea(sb.toString());
+        txt.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        txt.setEditable(false);
+        JOptionPane.showMessageDialog(null, txt);
     }
 }
 
 class Session {
-    private static String currentUser = null;
-
-    public static void login(String username) {
-        currentUser = username;
-    }
-
-    public static void logout() {
-        currentUser = null;
-    }
-
-    public static String getCurrentUser() {
-        return currentUser;
-    }
+    private static String user = null;
+    public static void login(String u) { user = u; }
+    public static String getCurrentUser() { return user; }
 }

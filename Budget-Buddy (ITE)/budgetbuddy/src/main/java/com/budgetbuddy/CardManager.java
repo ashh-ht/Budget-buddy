@@ -1,9 +1,9 @@
-package src;
+package com.budgetbuddy;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+
 import javax.swing.JOptionPane;
 
 public class CardManager {
@@ -12,58 +12,44 @@ public class CardManager {
     private final String user = "root";
     private final String password = "budgetbuddy-comprog";
 
-    public void updateCardDetails(String oldCardNum, String newCardNum, String newPin) {
-        String sql = "UPDATE card SET card_num = ?, card_pin = ? WHERE card_num = ?";
+    public void updateCardName(String oldCardNum, String newCardNum) {
+        String sql = "UPDATE card SET card_num = ? WHERE card_num = ?";
+        executeDatabaseUpdate(sql, newCardNum, oldCardNum);
+    }
 
+    public void updateCardPin(String cardNum, String newPin) {
+        String sql = "UPDATE card SET card_pin = ? WHERE card_num = ?";
+        executeDatabaseUpdate(sql, newPin, cardNum);
+    }
+
+    private void executeDatabaseUpdate(String sql, String newValue, String cardIdentifier) {
         try (Connection conn = DriverManager.getConnection(url, user, password);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, newCardNum);
-            pstmt.setString(2, newPin);
-            pstmt.setString(3, oldCardNum);
+            pstmt.setString(1, newValue);
+            pstmt.setString(2, cardIdentifier);
 
             int rowsAffected = pstmt.executeUpdate();
 
             if (rowsAffected > 0) {
                 JOptionPane.showMessageDialog(null, "<html><font color='green'>✅ Success!</font></html>");
             } else {
-                JOptionPane.showMessageDialog(null, "<html><font color='red'>❌ Not found.</font></html>");
+                JOptionPane.showMessageDialog(null, "<html><font color='red'>❌ Record not found.</font></html>");
             }
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
         }
-    }
-
-    private String getExistingPin(String cardNum) {
-        String pin = "";
-
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             PreparedStatement pstmt = conn.prepareStatement("SELECT card_pin FROM card WHERE card_num = ?")) {
-
-            pstmt.setString(1, cardNum);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                pin = rs.getString("card_pin");
-            }
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
-        }
-
-        return pin;
     }
 
     public static void main(String[] args) {
         CardManager manager = new CardManager();
 
-        String[] options = {"Name", "Card Pin"};
-
+        String[] options = {"Name", "PIN"};
         int choice = JOptionPane.showOptionDialog(
                 null,
-                "EDIT CARD DETAILS\n\nChoose:",
-                "Edit Card",
+                "Select field to edit:",
+                "Edit Card Details",
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.PLAIN_MESSAGE,
                 null,
@@ -73,23 +59,21 @@ public class CardManager {
 
         if (choice == -1) return;
 
-        String oldCard = JOptionPane.showInputDialog("Current Card Number:");
-        if (oldCard == null || oldCard.isEmpty()) return;
-
-        String newCard = null;
-        String newPin = null;
+        String currentCard = JOptionPane.showInputDialog("Enter Current Card Number:");
+        if (currentCard == null || currentCard.isEmpty()) return;
 
         if (choice == 0) {
-            newCard = JOptionPane.showInputDialog("Enter New Card Number:");
-            if (newCard == null || newCard.isEmpty()) return;
-            newPin = manager.getExistingPin(oldCard);
+            String newName = JOptionPane.showInputDialog("Enter New Card Name/Number:");
+            if (newName != null && !newName.isEmpty()) {
+                manager.updateCardName(currentCard, newName);
+            }
         } else if (choice == 1) {
-            newPin = JOptionPane.showInputDialog("Enter New PIN:");
-            if (newPin == null || newPin.isEmpty()) return;
-            newCard = oldCard;
+            String newPin = JOptionPane.showInputDialog("Enter New PIN:");
+            if (newPin != null && !newPin.isEmpty()) {
+                manager.updateCardPin(currentCard, newPin);
+            }
         }
 
-        manager.updateCardDetails(oldCard, newCard, newPin);
         System.exit(0);
     }
 }
