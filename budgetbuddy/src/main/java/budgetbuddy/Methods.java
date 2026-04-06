@@ -40,14 +40,14 @@ public class Methods {
         db.AccountDetails();
 
         while (!inMainMenu) {
-            System.out.println("\n==========MAIN MENU==========");
-            System.out.println("1. View Balance");
-            System.out.println("2. View Budget");
-            System.out.println("3. Deposit Cash");
-            System.out.println("4. View Financial Log");
-            System.out.println("5. Insert Budget Category");
-            System.out.println("6. Edit Account Details");
-            System.out.println("7. Done");
+            System.out.println(Account.Color.YELLOW + Account.Color.BOLD + "\n==========MAIN MENU==========" + Account.Color.RESET);
+            System.out.println(Account.Color.PURPLE + "1. View Balance" + Account.Color.RESET);
+            System.out.println(Account.Color.PURPLE + "2. View Budget" + Account.Color.RESET);
+            System.out.println(Account.Color.PURPLE + "3. Deposit Cash" + Account.Color.RESET);
+            System.out.println(Account.Color.PURPLE + "4. View Financial Log" + Account.Color.RESET);
+            System.out.println(Account.Color.PURPLE + "5. Insert Budget Category" + Account.Color.RESET);
+            System.out.println(Account.Color.PURPLE + "6. Edit Account Details" + Account.Color.RESET);
+            System.out.println(Account.Color.BLUE + "7. Done" + Account.Color.RESET);
             System.out.print("\nPick from the following: ");
             int choice = sc.nextInt();
             sc.nextLine();//clears buffer

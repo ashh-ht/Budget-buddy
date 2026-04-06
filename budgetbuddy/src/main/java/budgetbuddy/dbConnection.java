@@ -39,10 +39,10 @@ public class dbConnection {
         String cardNum = acc.getCardNum();
         LocalDateTime expiryDate = acc.getExpiryDate();
         String name = firstName + " " + lastName;
-        System.out.println("\n==========ACCOUNT DETAILS==========");
-        System.out.print("\nACCOUNT NAME: " + name);
-        System.out.println("\nCARD NUMBER: " + cardNum);
-        System.out.println("CARD EXPIRATION DATE: " + expiryDate.getMonth() + " " + expiryDate.getDayOfMonth() + ", "
+        System.out.println(Account.Color.GREEN + Account.Color.BOLD +"\n\n==========ACCOUNT DETAILS==========" + Account.Color.RESET);
+        System.out.print(Account.Color.BLUE + "\nACCOUNT NAME: " + Account.Color.RESET + name);
+        System.out.println(Account.Color.BLUE + "\nCARD NUMBER: " + Account.Color.RESET + cardNum);
+        System.out.println(Account.Color.BLUE + "CARD EXPIRATION DATE: " + Account.Color.RESET + expiryDate.getMonth() + " " + expiryDate.getDayOfMonth() + ", "
                 + expiryDate.getYear());
     }
 
@@ -545,7 +545,7 @@ public class dbConnection {
                 rs = st.executeQuery();
                 if (rs.next()) {
                     double balance = rs.getDouble("balance");
-                    System.out.println("\n==========BALANCE==========");
+                    System.out.println(Account.Color.VIOLET + Account.Color.BOLD + "\n~~~~~~~~~~~~~~~~~~~~BALANCE~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
                     AccountDetails();
                     System.out.printf("BALANCE: PHP %.2f%n", balance);
                 } else {
@@ -678,7 +678,7 @@ public class dbConnection {
             while (true) {
 
                 if (firstTime) {
-                    System.out.println("\n==========ADD BUDGET CATEGORY==========");
+                    System.out.println(Account.Color.GREEN + Account.Color.BOLD + "\n~~~~~~~~~~~~~~~~~~~~ADD BUDGET CATEGORY~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
                     System.out.println(
                             "New users are required to add two budget categories to help you manage your money better!\n");
                     addCateg(acc.getCardNum());
@@ -686,7 +686,7 @@ public class dbConnection {
                     setFirstTime(acc.getCardNum());
                     firstTime = false;
                 } else {
-                    System.out.println("\n==========ADD BUDGET CATEGORY==========");
+                    System.out.println(Account.Color.GREEN + Account.Color.BOLD + "\n~~~~~~~~~~~~~~~~~~~~ADD BUDGET CATEGORY~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
                     addCateg(acc.getCardNum());
                 }
                 System.out.println("Do you want to add another category? (yes/no)");

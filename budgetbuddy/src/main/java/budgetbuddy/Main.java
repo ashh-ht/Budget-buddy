@@ -22,10 +22,10 @@ public class Main {
         //starting menu
             while (true) { //while(true) ensures that the user inputs int not Strings
                 try {
-                    System.out.println("\n\nWelcome to your Budget Buddy!");
-                    System.out.println("1. Register");
-                    System.out.println("2. Login");
-                    System.out.println("3. Exit");
+                    System.out.println(Account.Color.YELLOW + Account.Color.BOLD + "\n\nWelcome to your Budget Buddy!" + Account.Color.RESET);
+                    System.out.println(Account.Color.PURPLE + "1. Register" + Account.Color.RESET);
+                    System.out.println(Account.Color.PURPLE + "2. Login" + Account.Color.RESET);
+                    System.out.println(Account.Color.PURPLE + "3. Exit" + Account.Color.RESET);
                     System.out.print("Please pick from the following: ");
                     choice = sc.nextInt();
                     sc.nextLine(); //clear buffer
