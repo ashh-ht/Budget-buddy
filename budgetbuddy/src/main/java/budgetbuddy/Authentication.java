@@ -1,4 +1,4 @@
-package budgetbuddy.src.main.java.budgetbuddy;
+package Budgetbuddy;
 
 import org.mindrot.jbcrypt.BCrypt;
 import java.time.LocalDateTime;
@@ -10,6 +10,7 @@ import javax.swing.JOptionPane;
 public class Authentication {
    Object[] options = new Object[] { "OK", "CANCEL" };
    private static HashMap<String, Token> storeToken = new HashMap<String, Token>();
+
    private static class Token {
       private final String user;
       private final String token;
@@ -43,10 +44,16 @@ public class Authentication {
       Token token = new Token(user, tokenString, now, expiry);
       storeToken.put(user, token);
       JOptionPane.showMessageDialog(null,
-            "Login Time: " + now.getMonth() + " " + now.getDayOfMonth() + ", " + now.getYear() + " " + now.getHour() + ":"
-                  + now.getMinute() + "\n\nYour session will expire in: " + expiry.getMonth() + " "
-                  + expiry.getDayOfMonth() + ", " + expiry.getYear() + " " + expiry.getHour() + ":"
-                  + expiry.getMinute());
+            "<html>" +
+               "Login Time: <font color='#00a500'>" +
+               now.getMonth() + " " + now.getDayOfMonth() + ", " + now.getYear() + " " +
+               now.getHour() + ":" + now.getMinute() +
+               "</font><br><br>" +
+               "Your session will expire in: <font color='#980202'>" +
+               expiry.getMonth() + " " + expiry.getDayOfMonth() + ", " + expiry.getYear() + " " +
+               expiry.getHour() + ":" + expiry.getMinute() +
+               "</font>" +
+            "</html>");
       return tokenString;
    }
 
@@ -57,7 +64,8 @@ public class Authentication {
    public boolean sessionChecker(String user) {
       Token token = storeToken.get(user);
       if (token == null) {
-         JOptionPane.showOptionDialog(null, "No token.\nClick OK to continue", "WARNING", -1, 2, (Icon) null,
+         JOptionPane.showOptionDialog(null, "<html><font color='red'>No token.</font></html>\nClick OK to continue",
+               "WARNING", -1, 2, (Icon) null,
                this.options, this.options[0]);
          return false;
       } else if (LocalDateTime.now().isAfter(token.getExpiryTime())) {

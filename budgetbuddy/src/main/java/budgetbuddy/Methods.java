@@ -1,4 +1,4 @@
-package budgetbuddy.src.main.java.budgetbuddy;
+package Budgetbuddy;
 
 import java.util.*;
 import javax.swing.JOptionPane;
@@ -88,7 +88,7 @@ public class Methods {
                     break;
                 default:
                     JOptionPane.showOptionDialog(null,
-                            "Invalid number. Please try again" + "\nClick OK to continue", "Warning",
+                            "<html><font color='red'>Invalid number. Please try again</font></html>" + "\nClick OK to continue", "Warning",
                             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                             null, options, options[0]);
                     break;

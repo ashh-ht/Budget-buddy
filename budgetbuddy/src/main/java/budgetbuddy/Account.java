@@ -1,4 +1,4 @@
-package budgetbuddy.src.main.java.budgetbuddy;
+package Budgetbuddy;
 
 import java.time.LocalDateTime;
 

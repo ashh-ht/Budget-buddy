@@ -1,4 +1,4 @@
-package budgetbuddy.src.main.java.budgetbuddy;
+package Budgetbuddy;
 
 import java.io.IOException;
 import java.sql.*;
@@ -54,7 +54,8 @@ public class dbConnection {
         ResultSet rs = null;
 
         if (conn == null) {
-            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+            JOptionPane.showOptionDialog(null,
+                    "<html><font color='red'>Failed to connect to database.</font></html>" + "\nClick OK to continue",
                     "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
@@ -121,7 +122,8 @@ public class dbConnection {
         ResultSet rs = null;
 
         if (conn == null) {
-            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+            JOptionPane.showOptionDialog(null,
+                    "<html><font color='red'>Failed to connect to database.</font></html>" + "\nClick OK to continue",
                     "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
@@ -142,7 +144,7 @@ public class dbConnection {
                 return true;
             } else {
                 JOptionPane.showOptionDialog(null,
-                        "Invalid card. Please check you card number or card pin." + "\nClick OK to continue",
+                        "<html><font color='red'>Invalid card.</font></html>" + "\nPlease check your card number or card pin." + "\nClick OK to continue",
                         "Warning",
                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                         null, options, options[0]);
@@ -160,7 +162,8 @@ public class dbConnection {
         PreparedStatement st = null;
 
         if (conn == null) {
-            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+            JOptionPane.showOptionDialog(null,
+                    "<html><font color='red'>Failed to connect to database.</font></html>" + "\nClick OK to continue",
                     "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
@@ -205,7 +208,8 @@ public class dbConnection {
         acc.setCardNum(cardNum);
         auth.Login(cardNum);
         JOptionPane.showOptionDialog(null,
-                "Please save your card number for future uses: \n" + cardNum + "\nClick OK to continue",
+                "Please save your card number for future uses: \n" + "<html><font color='green'>" + cardNum
+                        + "\n</font></html>" + "\nClick OK to continue",
                 "SUCCESS",
                 JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                 null, options, options[0]);
@@ -216,9 +220,15 @@ public class dbConnection {
                 acc.setCardPin(cardPin);
                 acc.setHash(Authentication.hashPin(cardPin));
                 String hashedPin = acc.getHash();
-                System.out.println("Valid pin. Please remember your pin.");
+                JOptionPane.showOptionDialog(null,
+                        "Valid pin. Please remember your pin." + "\nClick OK to continue",
+                        "SUCCESS",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                        null, options, options[0]);
                 if (conn == null) {
-                    JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+                    JOptionPane.showOptionDialog(null,
+                            "<html><font color='red'>Failed to connect to database.</font></html>"
+                                    + "\nClick OK to continue",
                             "Warning",
                             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                             null, options, options[0]);
@@ -250,7 +260,7 @@ public class dbConnection {
                 break;
             } else {
                 JOptionPane.showOptionDialog(null,
-                        "Invalid pin. Please enter a 4 digit number." + "\nClick OK to continue",
+                        "<html><font color='red'>Invalid pin.</font></html>" + "\nPlease enter a 4 digit number." + "\nClick OK to continue",
                         "WARNING",
                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                         null, options, options[0]);
@@ -265,7 +275,8 @@ public class dbConnection {
         PreparedStatement st = null;
 
         if (conn == null) {
-            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+            JOptionPane.showOptionDialog(null,
+                    "<html><font color='red'>Failed to connect to database.</font></html>" + "\nClick OK to continue",
                     "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
@@ -302,7 +313,8 @@ public class dbConnection {
         PreparedStatement st = null;
 
         if (conn == null) {
-            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+            JOptionPane.showOptionDialog(null,
+                    "<html><font color='red'>Failed to connect to database.</font></html>" + "\nClick OK to continue",
                     "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
@@ -318,7 +330,8 @@ public class dbConnection {
                 acc.setHash(hashedPin);
             } else {
                 JOptionPane.showOptionDialog(null,
-                        "Invalid pin. Please check your input and try again." + "\nClick OK to continue",
+                        "<html><font color='red'>Invalid pin!</font></html>"
+                                + "\nPlease check your input and try again." + "\nClick OK to continue",
                         "Warning",
                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                         null, options, options[0]);
@@ -360,7 +373,8 @@ public class dbConnection {
                 boolean pinValid = Authentication.checkPin(cardPin, hashedPin);
                 if (!pinValid) {
                     JOptionPane.showOptionDialog(null,
-                            "Invalid pin. Please check your input and try again." + "\nClick OK to continue",
+                            "<html><font color='red'>Invalid pin!</font></html>"
+                                    + "\nPlease check your input and try again." + "\nClick OK to continue",
                             "Warning",
                             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                             null, options, options[0]);
@@ -377,7 +391,7 @@ public class dbConnection {
             if (expired) {
                 JOptionPane.showMessageDialog(
                         null,
-                        "Your card is expired! Returning to main menu.",
+                        "<html><font color='red'>Your card is expired!</font></html>" + "\nReturning to main menu.",
                         "Card Expired",
                         JOptionPane.WARNING_MESSAGE);
                 return false;
@@ -399,9 +413,10 @@ public class dbConnection {
             return true;
         } else {
             JOptionPane.showOptionDialog(null,
-                    "Invalid card number. Please check your input and try again" + "\nClick OK to continue", "Warning",
-                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
-                    null, options, options[0]);
+                        "<html><font color='red'>Invalid card number!</font></html>" + "\nPlease check your input and try again." + "\nClick OK to continue",
+                        "Warning",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                        null, options, options[0]);
             return false;
         }
     }
@@ -413,7 +428,8 @@ public class dbConnection {
         ResultSet rs = null;
 
         if (conn == null) {
-            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+            JOptionPane.showOptionDialog(null,
+                    "<html><font color='red'>Failed to connect to database.</font></html>" + "\nClick OK to continue",
                     "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
@@ -432,7 +448,7 @@ public class dbConnection {
                 acc.setExpiryDate(expiryDate.toLocalDateTime());
             } else {
                 JOptionPane.showOptionDialog(null,
-                        "Incorrect card number. Please try again." + "\nClick OK to continue",
+                        "<html><font color='red'>Incorrect card number. Please try again.</font></html>" + "\nClick OK to continue",
                         "Warning",
                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                         null, options, options[0]);
@@ -463,7 +479,8 @@ public class dbConnection {
         ResultSet rs = null;
 
         if (conn == null) {
-            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+            JOptionPane.showOptionDialog(null,
+                    "<html><font color='red'>Failed to connect to database.</font></html>" + "\nClick OK to continue",
                     "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
@@ -522,7 +539,7 @@ public class dbConnection {
     public boolean viewBalance() {
         if (auth.sessionChecker(acc.getCardNum()) == false) {
             JOptionPane.showOptionDialog(null,
-                    "Your session has expired. Please login again. LOGGING OUT..." + "\nClick OK to continue",
+                    "Your session has expired. Please login again." + "<html><font color='red'>\nLOGGING OUT...</font></html>" + "\nClick OK to continue",
                     "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
@@ -533,7 +550,9 @@ public class dbConnection {
             ResultSet rs = null;
 
             if (conn == null) {
-                JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+                JOptionPane.showOptionDialog(null,
+                        "<html><font color='red'>Failed to connect to database.</font></html>"
+                                + "\nClick OK to continue",
                         "Warning",
                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                         null, options, options[0]);
@@ -553,7 +572,7 @@ public class dbConnection {
                     System.out.printf("BALANCE: PHP %.2f%n", balance);
                 } else {
                     JOptionPane.showOptionDialog(null,
-                            "Failed to retrieve balance. Please try again." + "\nClick OK to continue",
+                            "<html><font color='red'>Failed to retrieve balance. Please try again.</font></html>" + "\nClick OK to continue",
                             "Warning",
                             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                             null, options, options[0]);
@@ -595,7 +614,7 @@ public class dbConnection {
                 cardId = rs.getInt("id");
             } else {
                 JOptionPane.showOptionDialog(null,
-                        "Card not found! Please try again." + "\nClick OK to continue",
+                        "<html><font color='red'>Card not found! Please try again.</font></html>" + "\nClick OK to continue",
                         "Warning",
                         JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                         null, options, options[0]);
@@ -610,7 +629,7 @@ public class dbConnection {
             st2.executeUpdate();
 
             JOptionPane.showOptionDialog(null,
-                    "Category " + category + " has been added successfully!" + "\nClick OK to continue",
+                    "<html>Category " + "<font color='#9E00FF'>" + category + "</font>" + " has been added successfully!</html>" + "\nClick OK to continue",
                     "Success",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
                     null, options, options[0]);
@@ -626,7 +645,8 @@ public class dbConnection {
         Connection conn = getConnection();
 
         if (conn == null) {
-            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+            JOptionPane.showOptionDialog(null,
+                    "<html><font color='red'>Failed to connect to database.</font></html>" + "\nClick OK to continue",
                     "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
@@ -650,7 +670,8 @@ public class dbConnection {
         Connection conn = getConnection();
 
         if (conn == null) {
-            JOptionPane.showOptionDialog(null, "Failed to connect to database." + "\nClick OK to continue",
+            JOptionPane.showOptionDialog(null,
+                    "<html><font color='red'>Failed to connect to database.</font></html>" + "\nClick OK to continue",
                     "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
@@ -669,7 +690,7 @@ public class dbConnection {
     public boolean addCategFlow() {
         if (auth.sessionChecker(acc.getCardNum()) == false) {
             JOptionPane.showOptionDialog(null,
-                    "Your session has expired. Please login again. LOGGING OUT..." + "\nClick OK to continue",
+                    "Your session has expired. Please login again." + "<html><font color='red'>\nLOGGING OUT...</font></html>" + "\nClick OK to continue",
                     "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
@@ -683,7 +704,7 @@ public class dbConnection {
                     System.out.println(Account.Color.GREEN + Account.Color.BOLD
                             + "\n~~~~~~~~~~~~~~~~~~~~ADD BUDGET CATEGORY~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
                     System.out.println(
-                            "New users are required to add two budget categories to help you manage your money better!\n");
+                            "New users are required to add" + Account.Color.PURPLE + " two " + Account.Color.RESET + "budget categories to help you manage your money better!\n");
                     addCateg(acc.getCardNum());
                     addCateg(acc.getCardNum());
                     setFirstTime(acc.getCardNum());
