@@ -1,4 +1,4 @@
-package budgetbuddy;
+package budgetbuddy.src.main.java.budgetbuddy;
 
 import java.io.IOException;
 import java.sql.*;
@@ -39,10 +39,12 @@ public class dbConnection {
         String cardNum = acc.getCardNum();
         LocalDateTime expiryDate = acc.getExpiryDate();
         String name = firstName + " " + lastName;
-        System.out.println(Account.Color.GREEN + Account.Color.BOLD +"\n\n==========ACCOUNT DETAILS==========" + Account.Color.RESET);
+        System.out.println(Account.Color.GREEN + Account.Color.BOLD + "\n\n==========ACCOUNT DETAILS=========="
+                + Account.Color.RESET);
         System.out.print(Account.Color.BLUE + "\nACCOUNT NAME: " + Account.Color.RESET + name);
         System.out.println(Account.Color.BLUE + "\nCARD NUMBER: " + Account.Color.RESET + cardNum);
-        System.out.println(Account.Color.BLUE + "CARD EXPIRATION DATE: " + Account.Color.RESET + expiryDate.getMonth() + " " + expiryDate.getDayOfMonth() + ", "
+        System.out.println(Account.Color.BLUE + "CARD EXPIRATION DATE: " + Account.Color.RESET + expiryDate.getMonth()
+                + " " + expiryDate.getDayOfMonth() + ", "
                 + expiryDate.getYear());
     }
 
@@ -545,7 +547,8 @@ public class dbConnection {
                 rs = st.executeQuery();
                 if (rs.next()) {
                     double balance = rs.getDouble("balance");
-                    System.out.println(Account.Color.VIOLET + Account.Color.BOLD + "\n~~~~~~~~~~~~~~~~~~~~BALANCE~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
+                    System.out.println(Account.Color.VIOLET + Account.Color.BOLD
+                            + "\n~~~~~~~~~~~~~~~~~~~~BALANCE~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
                     AccountDetails();
                     System.out.printf("BALANCE: PHP %.2f%n", balance);
                 } else {
@@ -671,14 +674,14 @@ public class dbConnection {
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[0]);
             return false;
-        }
-        else {
+        } else {
             Scanner sc = new Scanner(System.in);
             boolean firstTime = isFirstTime(acc.getCardNum());
             while (true) {
 
                 if (firstTime) {
-                    System.out.println(Account.Color.GREEN + Account.Color.BOLD + "\n~~~~~~~~~~~~~~~~~~~~ADD BUDGET CATEGORY~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
+                    System.out.println(Account.Color.GREEN + Account.Color.BOLD
+                            + "\n~~~~~~~~~~~~~~~~~~~~ADD BUDGET CATEGORY~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
                     System.out.println(
                             "New users are required to add two budget categories to help you manage your money better!\n");
                     addCateg(acc.getCardNum());
@@ -686,12 +689,13 @@ public class dbConnection {
                     setFirstTime(acc.getCardNum());
                     firstTime = false;
                 } else {
-                    System.out.println(Account.Color.GREEN + Account.Color.BOLD + "\n~~~~~~~~~~~~~~~~~~~~ADD BUDGET CATEGORY~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
+                    System.out.println(Account.Color.GREEN + Account.Color.BOLD
+                            + "\n~~~~~~~~~~~~~~~~~~~~ADD BUDGET CATEGORY~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
                     addCateg(acc.getCardNum());
                 }
                 System.out.println("Do you want to add another category? (yes/no)");
                 String choice = sc.nextLine();
-                
+
                 if (choice.equalsIgnoreCase("no") || choice.equalsIgnoreCase("n")) {
                     JOptionPane.showOptionDialog(null,
                             "Returning to main menu." + "\nClick OK to continue",
