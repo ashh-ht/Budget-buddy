@@ -12,8 +12,8 @@ public class CardManager {
     private final String user = "root";
     private final String password = "budgetbuddy-comprog";
 
-    public void updateCardName(String oldCardNum, String newCardNum) {
-        String sql = "UPDATE card SET card_num = ? WHERE card_num = ?";
+    public void updateCardNum(String oldCardNum, String newCardNum) {
+        String sql = "UPDATE cardholder SET card_num = ? WHERE card_num = ?";
         executeDatabaseUpdate(sql, newCardNum, oldCardNum);
     }
 
@@ -45,7 +45,7 @@ public class CardManager {
     public static void main(String[] args) {
         CardManager manager = new CardManager();
 
-        String[] options = {"Name", "PIN"};
+        String[] options = {"Card Number", "PIN"};
         int choice = JOptionPane.showOptionDialog(
                 null,
                 "Select field to edit:",
@@ -63,9 +63,9 @@ public class CardManager {
         if (currentCard == null || currentCard.isEmpty()) return;
 
         if (choice == 0) {
-            String newName = JOptionPane.showInputDialog("Enter New Card Name/Number:");
-            if (newName != null && !newName.isEmpty()) {
-                manager.updateCardName(currentCard, newName);
+            String newNum = JOptionPane.showInputDialog("Enter New Card Number:");
+            if (newNum != null && !newNum.isEmpty()) {
+                manager.updateCardNum(currentCard, newNum);
             }
         } else if (choice == 1) {
             String newPin = JOptionPane.showInputDialog("Enter New PIN:");
