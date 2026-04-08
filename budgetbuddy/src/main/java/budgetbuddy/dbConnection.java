@@ -702,7 +702,147 @@ public class dbConnection {
                 }
             }
 
+    }
+    return true;
+}
+
+public boolean cardManager() {
+        if (!auth.sessionChecker(acc.getCardNum())) {
+            showSessionError();
+            return false;
         }
-        return true;
+
+        Scanner sc = new Scanner(System.in);
+        System.out.println("\n========== CARD MANAGER ==========");
+        System.out.println("[1] VIEW Budget Categories (View Only)");
+        System.out.println("[2] Edit Account Details (Name/PIN)");
+        System.out.println("[3] Back to Main Menu");
+        System.out.print("Choice: ");
+        String choice = sc.nextLine();
+
+        switch (choice) {
+            case "1":
+                viewBudgetOverview(); // Strictly read-only
+                return true;
+            case "2":
+                editAccountDetails();
+                return true;
+            case "3":
+                return true;
+            default:
+                JOptionPane.showMessageDialog(null, "Invalid Selection");
+                return false;
+        }
+    }
+
+    /**
+     * STRICTLY VIEW ONLY: No Update or Delete operations.
+     * Fetches and displays existing categories from the database.
+     */
+    private void viewBudgetOverview() {
+        String query = "SELECT name, budget FROM categories WHERE card_id = (SELECT id FROM card WHERE card_num = ?)";
+        
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            
+            pstmt.setString(1, acc.getCardNum());
+            ResultSet rs = pstmt.executeQuery();
+
+            System.out.println("\n--- BUDGET CATEGORY LIST (READ-ONLY) ---");
+            System.out.printf("%-20s | %-15s%n", "Category Name", "Daily Budget");
+            System.out.println("---------------------------------------------------");
+
+            boolean found = false;
+            while (rs.next()) {
+                found = true;
+                String name = rs.getString("name");
+                double budget = rs.getDouble("budget");
+                System.out.printf("%-20s | PHP %.2f%n", name, budget);
+            }
+
+            if (!found) {
+                System.out.println("No budget categories registered yet.");
+            }
+            System.out.println("---------------------------------------------------");
+            System.out.println("End of report.");
+
+        } catch (SQLException e) {
+            System.err.println("Error fetching budget data: " + e.getMessage());
+        }
+    }
+
+    private void editAccountDetails() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("\n--- EDIT ACCOUNT ---");
+        System.out.println("[1] Change Name");
+        System.out.println("[2] Change Card PIN");
+        System.out.print("Choice: ");
+        String choice = sc.nextLine();
+
+        try (Connection conn = getConnection()) {
+            if (choice.equals("1")) {
+                System.out.print("Enter New First Name: ");
+                String fName = sc.nextLine();
+                System.out.print("Enter New Last Name: ");
+                String lName = sc.nextLine();
+
+                String sql = "UPDATE cardholder SET First_name = ?, Last_name = ? WHERE card_num = ?";
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ps.setString(1, fName);
+                ps.setString(2, lName);
+                ps.setString(3, acc.getCardNum());
+                
+                if (ps.executeUpdate() > 0) {
+                    acc.setFirstName(fName);
+                    acc.setLastName(lName);
+                    JOptionPane.showMessageDialog(null, "Name updated successfully!");
+                }
+            } else if (choice.equals("2")) {
+                System.out.print("Enter New 4-Digit PIN: ");
+                String newPin = sc.nextLine();
+                if (newPin.matches("\\d{4}")) {
+                    String sql = "UPDATE cardholder SET card_pin = ? WHERE card_num = ?";
+                    PreparedStatement ps = conn.prepareStatement(sql);
+                    ps.setString(1, newPin);
+                    ps.setString(2, acc.getCardNum());
+                    ps.executeUpdate();
+                    JOptionPane.showMessageDialog(null, "PIN updated successfully!");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // --- OTHER CORE METHODS ---
+
+    public void AccountDetails() {
+        System.out.println("\n==========ACCOUNT DETAILS==========");
+        System.out.println("ACCOUNT NAME: " + acc.getFirstName() + " " + acc.getLastName());
+        System.out.println("CARD NUMBER: " + acc.getCardNum());
+    }
+
+    public boolean viewBalance() {
+        if (!auth.sessionChecker(acc.getCardNum())) {
+            showSessionError();
+            return false;
+        }
+        try (Connection conn = getConnection();
+             PreparedStatement st = conn.prepareStatement("SELECT em.balance FROM existingmoney em JOIN card c ON em.id = c.existingmoney_id WHERE card_num = ?")) {
+            st.setString(1, acc.getCardNum());
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                System.out.println("\n========== CURRENT BALANCE ==========");
+                System.out.printf("BALANCE: PHP %.2f%n", rs.getDouble("balance"));
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private void showSessionError() {
+        JOptionPane.showMessageDialog(null, "Session Expired. Please login again.");
     }
 }
