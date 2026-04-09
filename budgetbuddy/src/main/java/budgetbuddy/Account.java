@@ -7,6 +7,7 @@ public class Account {
     private String lastName;
     private String cardNum;
     private String cardPin;
+    private int cardId;
     private LocalDateTime expiryDate;
     private String hash;
 
@@ -34,6 +35,10 @@ public class Account {
     public String getHash() {
         return this.hash;
     }
+    
+    public int getCardId() {
+        return this.cardId;
+    }
 
     // setters
     public void setFirstName(String firstName) {
@@ -59,6 +64,10 @@ public class Account {
     public void setHash(String hash) {
         this.hash = hash;
     }
+
+    public void setCardId(int cardId) {
+        this.cardId = cardId;
+    }                           
 
     class Color {
         public static final String RESET = "\u001B[0m";

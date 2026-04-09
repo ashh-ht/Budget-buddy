@@ -63,13 +63,25 @@ public class Methods {
                     }
                     break;
                 case 2:
-                    //view budget func
+                    while(true) {
+                        loggedIn = db.viewBudget();
+                        if(!loggedIn) {
+                            return;
+                        }
+                        break;
+                    }
                     break;
                 case 3:
                     //view deposit cash
                     break;
                 case 4:
-                    //view finan log
+                    while(true) {
+                        loggedIn = db.FinancialLog();
+                        if(!loggedIn) {
+                            return;
+                        }
+                        break;
+                    }
                     break;
                 case 5:
                     while(true) {
