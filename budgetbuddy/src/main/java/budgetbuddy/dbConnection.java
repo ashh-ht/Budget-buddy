@@ -713,41 +713,13 @@ public class dbConnection {
     return true;
 }
 
-// card manager flow
-public boolean cardManager() {
+// view budget categories
+public void viewBudgetOverview() {
     if (!auth.sessionChecker(acc.getCardNum())) {
         showSessionError();
-        return false;
+        return;
     }
 
-    Scanner sc = new Scanner(System.in);
-    System.out.println("\n========== CARD MANAGER (READ-ONLY) ==========");
-    System.out.println("[1] VIEW Budget Categories");
-    System.out.println("[2] VIEW Account Details");
-    System.out.println("[3] Back to Main Menu");
-    System.out.print("Choice: ");
-    
-    String choice = sc.nextLine();
-
-    if (choice.equals("1")) {
-        viewBudgetOverview(); // View only
-        return true;
-    } 
-    else if (choice.equals("2")) {
-        showAccountDetails(); // View only
-        return true;
-    } 
-    else if (choice.equals("3")) {
-        return true;
-    } 
-    else {
-        JOptionPane.showMessageDialog(null, "Invalid Selection");
-        return false;
-    }
-}
-
-// View Budget Categories - Read Only
-private void viewBudgetOverview() {
     String query = "SELECT name, budget FROM categories WHERE card_id = (SELECT id FROM card WHERE card_num = ?)";
     
     try (Connection conn = getConnection();
@@ -778,7 +750,14 @@ private void viewBudgetOverview() {
     }
 }
 
-private void showAccountDetails() {
+
+// view account details
+public void showAccountDetails() {
+    if (!auth.sessionChecker(acc.getCardNum())) {
+        showSessionError();
+        return;
+    }
+
     System.out.println("\n--- ACCOUNT DETAILS (READ-ONLY) ---");
     System.out.println("NAME: " + acc.getFirstName() + " " + acc.getLastName());
     System.out.println("CARD: " + acc.getCardNum());
