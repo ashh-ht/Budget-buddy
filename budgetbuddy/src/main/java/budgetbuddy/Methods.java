@@ -63,16 +63,26 @@ public class Methods {
                     }
                     break;
                 case 2:
-                    while(true) {
-                        loggedIn = db.viewBudget();
-                        if(!loggedIn) {
-                            return;
-                        }
+                    if (db.balanceChecker() == false) {
                         break;
+                    } else {
+                        while (true) {
+                            loggedIn = db.viewBudget();
+                            if (!loggedIn) {
+                                return;
+                            }
+                            break;
+                        }
                     }
                     break;
                 case 3:
-                    //view deposit cash
+                    while(true) {
+                        loggedIn = db.depositCash();
+                        if (!loggedIn) {
+                            return;
+                        }
+                        break;
+                    }   
                     break;
                 case 4:
                     while(true) {
@@ -93,7 +103,13 @@ public class Methods {
                     }
                     break;
                 case 6:
-                    //update database details
+                    while(true) {
+                        loggedIn = db.editAccDetails();
+                        if (!loggedIn) {
+                            return;
+                        }
+                        break;
+                    } 
                     break;
                 case 7:
                     inMainMenu = true;

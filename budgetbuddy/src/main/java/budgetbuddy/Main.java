@@ -49,20 +49,14 @@ public class Main {
                     break;
 
                 case 2:
-                    try {
+                    while (true) {
                         boolean loginSuccess = db.login();
                         if (!loginSuccess) {
                             continue;
                         }
-                    } catch (IOException e) {
-                        JOptionPane.showOptionDialog(null,
-                                "<html><font color = 'red'>Invalid input.</font></html>"
-                                        + " Please enter a number from the following." + "\nClick OK to continue",
-                                "Warning",
-                                JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
-                                null, options, options[0]);
-                        return;
+                        break;
                     }
+                    
                     m.MainMenu();
                     break;
                 case 3:

@@ -80,4 +80,9 @@ public class Account {
         public static final String BOLD = "\u001B[1m";
         public static final String VIOLET = "\u001B[38;5;129m";
     }
+
+    public enum status {
+        ESSENTIALS,
+        TREATS
+    }
 }
