@@ -64,9 +64,9 @@ public class Authentication {
    public boolean sessionChecker(String user) {
       Token token = storeToken.get(user);
       if (token == null) {
-         JOptionPane.showOptionDialog(null, "<html><font color='red'>No token.</font></html>\nClick OK to continue",
-               "WARNING", -1, 2, (Icon) null,
-               this.options, this.options[0]);
+         String message = "<html><font color='red'>No token.</font></html>\nClick OK to continue";
+         String title = "WARNING";
+         Methods.showErrorMessage(title, message);
          return false;
       } else if (LocalDateTime.now().isAfter(token.getExpiryTime())) {
          storeToken.remove(token.getToken());
@@ -81,6 +81,9 @@ public class Authentication {
    }
 
    public static boolean checkPin(String inputPin, String storedHash) {
+      if (storedHash == null || inputPin == null) {
+         return false;
+      }else
       return BCrypt.checkpw(inputPin, storedHash);
    }
 }

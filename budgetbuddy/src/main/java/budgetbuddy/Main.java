@@ -1,8 +1,6 @@
 package Budgetbuddy;
 
 import javax.swing.*;
-
-import java.io.IOException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -15,6 +13,8 @@ public class Main {
 
         Scanner sc = new Scanner(System.in);
         String dec = "yes";
+        String message;
+        String title;
         int choice;
         Object[] options = { "OK", "CANCEL" };
         Object[] options1 = { "BYE", "CANCEL" };
@@ -26,20 +26,18 @@ public class Main {
                             + Account.Color.RESET);
                     System.out.println(Account.Color.PURPLE + "1. Register" + Account.Color.RESET);
                     System.out.println(Account.Color.PURPLE + "2. Login" + Account.Color.RESET);
-                    System.out.println(Account.Color.PURPLE + "3. Exit" + Account.Color.RESET);
+                    System.out.println(Account.Color.PURPLE + "3. System Details" + Account.Color.RESET);
+                    System.out.println(Account.Color.PURPLE + "4. Exit" + Account.Color.RESET);
                     System.out.print("Please pick from the following: ");
                     choice = sc.nextInt();
                     sc.nextLine(); // clear buffer
                     break;
                 } catch (InputMismatchException e) {
                     sc.nextLine();
-                    JOptionPane.showOptionDialog(null,
-                            "<html><font color = 'red'>Invalid input.</font></html>"
-                                    + " Please enter a number from the following." + "\nClick OK to continue",
-                            "Warning",
-                            JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
-                            null, options, options[0]);
-
+                    message = "<html><font color = 'red'>Invalid input.</font></html>"
+                            + " Please enter a number from the following." + "\nClick OK to continue";
+                    title = "Warning";
+                    Methods.showErrorMessage(title, message);
                 }
             }
             switch (choice) {
@@ -60,17 +58,20 @@ public class Main {
                     m.MainMenu();
                     break;
                 case 3:
+                    m.showSystemDetails();
+                    continue;
+                case 4:
                     JOptionPane.showOptionDialog(null, "Thank you for using your Budget Buddy! Goodbye!",
                             "SEE YOU! <3",
                             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                             null, options1, options1[0]);
+                            sc.close();
                     System.exit(0); // exits the system
                     break;
                 default:
-                    JOptionPane.showOptionDialog(null, "<html><font color='red'>Invalid number.</font></html>" + " Please try again" + "\nClick OK to continue",
-                            "Warning",
-                            JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
-                            null, options, options[0]);
+                    message = "<html><font color='red'>Invalid number.</font></html>" + " Please try again" + "\nClick OK to continue";
+                    title = "Warning";
+                    Methods.showErrorMessage(title, message);
                     break;
             }
             System.out.println("Login again? [yes/no]");
