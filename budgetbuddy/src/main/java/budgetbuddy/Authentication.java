@@ -4,7 +4,6 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.UUID;
-import javax.swing.Icon;
 import javax.swing.JOptionPane;
 
 public class Authentication {
@@ -43,7 +42,7 @@ public class Authentication {
       LocalDateTime expiry = now.plusMinutes(30L);
       Token token = new Token(user, tokenString, now, expiry);
       storeToken.put(user, token);
-      JOptionPane.showMessageDialog(null,
+      String message =
             "<html>" +
                "Login Time: <font color='#00a500'>" +
                now.getMonth() + " " + now.getDayOfMonth() + ", " + now.getYear() + " " +
@@ -53,7 +52,9 @@ public class Authentication {
                expiry.getMonth() + " " + expiry.getDayOfMonth() + ", " + expiry.getYear() + " " +
                expiry.getHour() + ":" + expiry.getMinute() +
                "</font>" +
-            "</html>");
+                  "</html>";
+      String title = "SESSION";
+      Methods.showMessage(title, message);
       return tokenString;
    }
 

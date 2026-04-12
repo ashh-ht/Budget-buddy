@@ -16,8 +16,9 @@ public class Main {
         String message;
         String title;
         int choice;
-        Object[] options = { "OK", "CANCEL" };
+        boolean inMainMenu;
         Object[] options1 = { "BYE", "CANCEL" };
+
         do {
             // starting menu
             while (true) { // while(true) ensures that the user inputs int not Strings
@@ -33,43 +34,47 @@ public class Main {
                     sc.nextLine(); // clear buffer
                     break;
                 } catch (InputMismatchException e) {
-                    sc.nextLine();
-                    message = "<html><font color = 'red'>Invalid input.</font></html>"
-                            + " Please enter a number from the following." + "\nClick OK to continue";
+                    message = "<html><font color = 'red'>Invalid input.</font>"
+                            + " Please enter a number from the following." + "<br>Click OK to continue";
                     title = "Warning";
                     Methods.showErrorMessage(title, message);
+                    sc.nextLine();
                 }
             }
             switch (choice) {
                 case 1:
                     db.register();
-                    m.MainMenu();
+                    inMainMenu = m.MainMenu();
+                    if (!inMainMenu) {
+                        continue;
+                    }
                     break;
 
                 case 2:
-                    while (true) {
-                        boolean loginSuccess = db.login();
-                        if (!loginSuccess) {
-                            continue;
-                        }
+                    boolean loginSuccess = db.login();
+                    if (!loginSuccess) {
                         break;
                     }
-                    
-                    m.MainMenu();
+                    inMainMenu = m.MainMenu();
+                    if (!inMainMenu) {
+                        continue;
+                    }
                     break;
                 case 3:
                     m.showSystemDetails();
                     continue;
                 case 4:
-                    JOptionPane.showOptionDialog(null, "Thank you for using your Budget Buddy! Goodbye!",
+                    JOptionPane.showOptionDialog(null,
+                            "<html><div style = 'font-size:15px; font-family:Georgia; color: #2539f1;'>Thank you for using your Budget Buddy! Goodbye!</div></html>",
                             "SEE YOU! <3",
                             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                             null, options1, options1[0]);
-                            sc.close();
+                    sc.close();
                     System.exit(0); // exits the system
                     break;
                 default:
-                    message = "<html><font color='red'>Invalid number.</font></html>" + " Please try again" + "\nClick OK to continue";
+                    message = "<html><font color='red'>Invalid number.</font>" + " Please try again"
+                            + "<br>Click OK to continue";
                     title = "Warning";
                     Methods.showErrorMessage(title, message);
                     break;
@@ -77,7 +82,8 @@ public class Main {
             System.out.println("Login again? [yes/no]");
             dec = sc.nextLine();
             if (dec.equalsIgnoreCase("no") || dec.equalsIgnoreCase("n")) {
-                JOptionPane.showOptionDialog(null, "<html><font color='#0017e6'>Thank you for using your Budget Buddy! Goodbye!</font></html>",
+                JOptionPane.showOptionDialog(null,
+                        "<html><div style = 'font-size:15px; font-family:Georgia; color: #2539f1;'>Thank you for using your Budget Buddy! Goodbye!</div></html>",
                         "SEE YOU! <3",
                         JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
                         null, options1, options1[0]);

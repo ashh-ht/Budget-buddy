@@ -17,6 +17,7 @@ public class dbConnection {
     }
 
     Object[] options = { "OK", "CANCEL" };
+    List<String> treats = new ArrayList<>();
     Scanner sc = new Scanner(System.in);
     String title;
     String message;
@@ -124,7 +125,9 @@ public class dbConnection {
                         st = conn.prepareStatement("DELETE FROM cardholder WHERE card_num = ?");
                         st.setString(1, cardNum);
                         st.executeUpdate();
-                        System.out.println("Your card has been deleted");
+                        message = "Your card has been deleted";
+                        title = "DELETED!";
+                        Methods.showMessage(title, message);
                         return true;
                     } else {
                         return false;
@@ -180,7 +183,7 @@ public class dbConnection {
                 return true;
             } else {
                 message = "<font color='red'>Invalid card.</font>"
-                        + "<br>Please check your card number or card pin." + "<br>Click OK to continue";
+                        + "<br>Please check your card number if it is correct." + "<br>Click OK to continue";
                 title = "WARNING!";
                 Methods.showErrorMessage(title, message);
                 return false;
@@ -381,7 +384,6 @@ public class dbConnection {
         boolean loginSuccess = false;
         // will return false if one credential of user is wrong
         while (!loginSuccess) {
-
             String cardNum;
             while (true) {
                 System.out.print("Enter you card number: ");
@@ -413,6 +415,14 @@ public class dbConnection {
                            // characters
                 System.out.print("Enter your card pin: ");
                 String cardPin = sc.nextLine();
+
+                if (!cardPin.matches("\\d+")) { // \\d+ is checking if there is only digit in the input
+                    message = "<font color='red'>Invalid input!</font>"
+                            + "<br>Please check your input and try again." + "<br>Click OK to continue";
+                    title = "WARNING!";
+                    Methods.showErrorMessage(title, message);
+                    continue;
+                }
                 acc.setCardPin(cardPin);
                 getHashedPin(cardNum);
                 String hash = acc.getHash();
@@ -445,9 +455,12 @@ public class dbConnection {
         long lastDigit = Long.parseLong(cardNum) % 10; // get the last number of the card num
         long secondLastDigit = (Long.parseLong(cardNum) / 10) % 10; // get the second last number
         long sum = lastDigit + secondLastDigit; // add the last and second last number
+        String noSpace = cardNum.replaceAll("\\s+", ""); // ensures that the input card num has no white spaces
 
-        if (sum == 10) {
-            JOptionPane.showMessageDialog(null, "Valid Card Number!");
+        if (sum == 10 && noSpace.length() == 16) {
+            message = "Valid Card Number!";
+            title = "SUCCESS!";
+            Methods.showMessage(title, message);
             return true;
         } else {
             message = "<font color='red'>Invalid card number!</font>"
@@ -640,12 +653,28 @@ public class dbConnection {
             if (!isValidInput(category)) {
                 continue;
             }
-            try{
+            // check if categ alr exists
+            try (PreparedStatement ps = conn.prepareStatement("SELECT name FROM categories WHERE name = ?")) {
+                ps.setString(1, category);
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    message = "<font color = red>Category " + category + " already exists." + "</font>";
+                    title = "WARNING!";
+                    Methods.showErrorMessage(title, message);
+
+                    return;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
                 System.out.print("Enter estimated category budget for one day: ");
                 budget = sc.nextDouble();
                 sc.nextLine();
                 break;
             } catch (InputMismatchException e) {
+                sc.nextLine();
                 message = "<font color = 'red'>Invalid input.</font>"
                         + " Please enter a number." + "<br>Click OK to continue.";
                 title = "WARNING!";
@@ -653,20 +682,6 @@ public class dbConnection {
             }
         }
         int cardId = acc.getCardId();
-        try (PreparedStatement ps = conn.prepareStatement("SELECT name FROM categories WHERE name = ?")) {
-            ps.setString(1, category);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                message = "<font color = red>Category " + category + " already exists." + "</font>";
-                title = "WARNING!";
-                Methods.showErrorMessage(title, message);
-
-                return;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
 
         try (PreparedStatement st = conn
                 .prepareStatement("INSERT INTO categories (name, budget, card_id) VALUES (?, ?, ?)")) {
@@ -777,114 +792,128 @@ public class dbConnection {
             Methods.showErrorMessage(title, message);
             return false;
         } else {
-            int choice;
-            while (true) {
-                try {
-                    System.out.println(Account.Color.VIOLET + Account.Color.BOLD
-                            + "\n~~~~~~~~~~~~~~~~~~~~FINANCIAL LOG~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
-                    System.out.println(Account.Color.PURPLE + "1. View Essential Expenses" + Account.Color.RESET);
-                    System.out.println(Account.Color.PURPLE + "2. View Non-Essential Expenses" + Account.Color.RESET);
-                    System.out.println(Account.Color.PURPLE + "3. Filter Financial Log" + Account.Color.RESET);
-                    System.out.println(Account.Color.PURPLE + "4. Add Financial Log" + Account.Color.RESET);
-                    System.out.println(Account.Color.PURPLE + "5. Return to Main Menu" + Account.Color.RESET);
-                    System.out.print("Select from the following options: ");
-                    choice = sc.nextInt();
-                    sc.nextLine();
-                    break;
-                } catch (InputMismatchException e) {
-                    sc.nextLine();
-                    message = "<font color = 'red'>Invalid input.</font>"
-                            + " Please enter a number from the following."
-                            + "<br>Click OK to continue.";
-                    title = "WARNING!";
-                    Methods.showErrorMessage(title, message);
-                    continue;
+            int choice = 0;
+            do {
+
+                while (true) {
+                    try {
+                        System.out.println(Account.Color.VIOLET + Account.Color.BOLD
+                                + "\n~~~~~~~~~~~~~~~~~~~~FINANCIAL LOG~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
+                        System.out.println(Account.Color.PURPLE + "1. View Essential Expenses" + Account.Color.RESET);
+                        System.out
+                                .println(Account.Color.PURPLE + "2. View Non-Essential Expenses" + Account.Color.RESET);
+                        System.out.println(Account.Color.PURPLE + "3. Filter Financial Log" + Account.Color.RESET);
+                        System.out.println(Account.Color.PURPLE + "4. Add Financial Log" + Account.Color.RESET);
+                        System.out.println(Account.Color.PURPLE + "5. Edit Financial Log" + Account.Color.RESET);
+                        System.out.println(Account.Color.PURPLE + "0. Return to Main Menu" + Account.Color.RESET);
+                        System.out.print("Select from the following options: ");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        break;
+                    } catch (InputMismatchException e) {
+                        sc.nextLine();
+                        message = "<font color = 'red'>Invalid input.</font>"
+                                + " Please enter a number from the following."
+                                + "<br>Click OK to continue.";
+                        title = "WARNING!";
+                        Methods.showErrorMessage(title, message);
+                    }
                 }
-            }
-            switch (choice) {
-                case 1:
-                    if (!expensesChecker(Account.status.ESSENTIALS.name())) {
-                        message = "<font color='red'><br>NO financial record found!</font>"
-                                + "<br>Click OK to continue.";
-                        title = "WARNING!";
-                        Methods.showErrorMessage(title, message);
-                    } else {
-                        viewEssential();
-                    }
-                    break;
-                case 2:
-                    if (!expensesChecker(Account.status.TREATS.name())) {
-                        message = "<font color='red'><br>NO financial record found!</font>"
-                                + "<br>Click OK to continue.";
-                        title = "WARNING!";
-                        Methods.showErrorMessage(title, message);
-                    } else {
-                        viewTreats();
-                    }
-                    break;
-                case 3:
-                    if (!expensesChecker(Account.status.ESSENTIALS.name())
-                            && !expensesChecker(Account.status.TREATS.name())) {
-                        message = "<font color='red'><br>NO financial record found!</font>"
-                                + "<br>Click OK to continue.";
-                        title = "WARNING!";
-                        Methods.showErrorMessage(title, message);
-                    } else {
-                        int filterChoice;
-                        while (true) {
-                            try {
-                                System.out.println(Account.Color.GREEN + "\n==========FILTER FINANCIAL LOG=========="
-                                        + Account.Color.RESET);
-                                System.out.println(Account.Color.BLUE + "1. Filter by day" + Account.Color.RESET);
-                                System.out.println(Account.Color.BLUE + "2. Filter by week" + Account.Color.RESET);
-                                System.out.println(Account.Color.BLUE + "3. Filter by month" + Account.Color.RESET);
-                                System.out.print("Select from the following options: ");
-                                filterChoice = sc.nextInt();
-                                break;
-                            } catch (InputMismatchException e) {
-                                sc.nextLine();
-                                message = "<font color = 'red'>Invalid input.</font>"
-                                        + " Please enter a number from the following."
-                                        + "<br>Click OK to continue.";
-                                title = "WARNING!";
-                                Methods.showErrorMessage(title, message);
-                                continue;
-                            }
+                switch (choice) {
+                    case 1:
+                        if (!expensesChecker(Account.status.ESSENTIALS.name())) {
+                            message = "<font color='red'><br>NO financial record found!</font>"
+                                    + "<br>Click OK to continue.";
+                            title = "WARNING!";
+                            Methods.showErrorMessage(title, message);
+                        } else {
+                            viewEssential();
+                        }
+                        continue;
+                    case 2:
+                        if (!expensesChecker(Account.status.TREATS.name())) {
+                            message = "<font color='red'><br>NO financial record found!</font>"
+                                    + "<br>Click OK to continue.";
+                            title = "WARNING!";
+                            Methods.showErrorMessage(title, message);
+                        } else {
+                            viewTreats();
+                        }
+                        break;
+                    case 3:
+                        if (!expensesChecker(Account.status.ESSENTIALS.name())
+                                && !expensesChecker(Account.status.TREATS.name())) {
+                            message = "<font color='red'><br>NO financial record found!</font>"
+                                    + "<br>Click OK to continue.";
+                            title = "WARNING!";
+                            Methods.showErrorMessage(title, message);
+                        } else {
+                            int filterChoice = 0;
+                            do {
+                                while (true) {
+                                    try {
+                                        System.out
+                                                .println(Account.Color.GREEN
+                                                        + "\n==========FILTER FINANCIAL LOG=========="
+                                                        + Account.Color.RESET);
+                                        System.out
+                                                .println(Account.Color.BLUE + "1. Filter by day" + Account.Color.RESET);
+                                        System.out.println(
+                                                Account.Color.BLUE + "2. Filter by week" + Account.Color.RESET);
+                                        System.out.println(
+                                                Account.Color.BLUE + "3. Filter by month" + Account.Color.RESET);
+                                        System.out.println(Account.Color.BLUE + "0. Back" + Account.Color.RESET);
+                                        System.out.print("Select from the following options: ");
+                                        filterChoice = sc.nextInt();
+                                        break;
+                                    } catch (InputMismatchException e) {
+                                        sc.nextLine();
+                                        message = "<font color = 'red'>Invalid input.</font>"
+                                                + " Please enter a number from the following."
+                                                + "<br>Click OK to continue.";
+                                        title = "WARNING!";
+                                        Methods.showErrorMessage(title, message);
+                                    }
+                                }
+
+                                switch (filterChoice) {
+                                    case 1:
+                                        filterByDay();
+                                        break;
+                                    case 2:
+                                        filterByWeek();
+                                        break;
+                                    case 3:
+                                        filterByMonth();
+                                        break;
+                                    case 0:
+                                        break;
+                                    default:
+                                        message = "<font color='red'>Invalid number. Please try again</font>"
+                                                + "<br>Click OK to continue.";
+                                        title = "WARNING!";
+                                        Methods.showErrorMessage(title, message);
+                                }
+                            } while (filterChoice != 0);
                         }
 
-                        switch (filterChoice) {
-                            case 1:
-                                filterByDay();
-                                break;
-                            case 2:
-                                filterByWeek();
-                                break;
-                            case 3:
-                                filterByMonth();
-                                break;
-                            default:
-                                message = "<font color='red'>Invalid number. Please try again</font>"
-                                        + "<br>Click OK to continue.";
-                                title = "WARNING!";
-                                Methods.showErrorMessage(title, message);
-                                break;
-                        }
-                    }
-
-                    break;
-                case 4:
-                    addFinLog();
-                    break;
-                case 5:
-                    return false;
-                default:
-                    message = "<font color='red'>Invalid number. Please try again</font>"
-                            + "<br>Click OK to continue.";
-                    title = "WARNING!";
-                    Methods.showErrorMessage(title, message);
-                    break;
-            }
-
+                        break;
+                    case 4:
+                        addFinLog();
+                        break;
+                    case 5:
+                            editFinLog(acc.getCardNum());
+                            break;
+                    case 0:
+                        return true;
+                    default:
+                        message = "<font color='red'>Invalid number. Please try again</font>"
+                                + "<br>Click OK to continue.";
+                        title = "WARNING!";
+                        Methods.showErrorMessage(title, message);
+                        break;
+                }
+            } while (choice != 0);
         }
         return true;
     }
@@ -918,13 +947,15 @@ public class dbConnection {
             return;
         }
 
-        System.out.println(Account.Color.GREEN + "==========ADD FINANCIAL LOG==========" + Account.Color.RESET);
         do {
-            int choice;
+            int choice = 0;
             while (true) {
                 try {
+                    System.out.println(
+                            Account.Color.GREEN + "\n==========ADD FINANCIAL LOG==========" + Account.Color.RESET);
                     System.out.println(Account.Color.BLUE + "1. Add in a category (essentials)" + Account.Color.RESET);
                     System.out.println(Account.Color.BLUE + "2. No category (non-essentials)" + Account.Color.RESET);
+                    System.out.println(Account.Color.BLUE + "0. Back" + Account.Color.RESET);
                     System.out.print("Select from the following options: ");
                     choice = sc.nextInt();
                     sc.nextLine(); // clear buffer
@@ -956,13 +987,13 @@ public class dbConnection {
                                     + "<br>Click OK to continue.";
                             title = "WARNING!";
                             Methods.showErrorMessage(title, message);
-                            return;
+                            continue;
                         }
                         System.out.println("CATEGORIES: ");
                         for (int i = 0; i < categories.size(); i++) {
                             System.out.println((i + 1) + ". " + categories.get(i));
                         }
-                        System.out.println("Select a category: ");
+                        System.out.print("Select a category: ");
                         int categoryChoice = sc.nextInt();
                         sc.nextLine(); // clear buffer
                         if (categoryChoice < 1 || categoryChoice > categories.size()) {
@@ -970,7 +1001,7 @@ public class dbConnection {
                                     + "<br>Click OK to continue.";
                             title = "WARNING!";
                             Methods.showErrorMessage(title, message);
-                            return;
+                            break;
                         }
                         String selectedCategory = categories.get(categoryChoice - 1);
 
@@ -978,9 +1009,22 @@ public class dbConnection {
                         String expenseName = sc.nextLine();
                         expenseName = formatInput(expenseName);
 
-                        System.out.print("Enter the amount of the expense: ");
-                        double expenseAmount = sc.nextDouble();
-                        sc.nextLine(); // clear buffer
+                        double expenseAmount;
+                        while (true) {
+                            try {
+                                System.out.print("Enter the amount of the expense: ");
+                                expenseAmount = sc.nextDouble();
+                                sc.nextLine(); // clear buffer
+                                break;
+                            } catch (InputMismatchException e) {
+                                sc.nextLine();
+                                message = "<font color = 'red'>Invalid input.</font>"
+                                        + " Please enter a number." + "<br>Click OK to continue.";
+                                title = "WARNING!";
+                                Methods.showErrorMessage(title, message);
+                            }
+                        }
+
                         try (PreparedStatement st = conn.prepareStatement(
                                 "SELECT balance FROM existingmoney em JOIN card c ON em.id = c.existingmoney_id WHERE c.id = ?")) {
                             st.setInt(1, acc.getCardId());
@@ -1000,19 +1044,21 @@ public class dbConnection {
                         } catch (SQLException e) {
                             e.printStackTrace();
                         }
-
-                        System.out.print("Enter the date of the expense (YYYY-MM-DD): ");
-                        LocalDate expenseDate = LocalDate.parse(sc.nextLine());
+                        LocalDate expenseDate;
                         while (true) {
-                            System.out.print("Enter the date of the expense (YYYY-MM-DD): ");
-                            String input = sc.nextLine();
-
                             try {
-                                expenseDate = LocalDate.parse(input);
-                                if (expenseDate.isAfter(LocalDate.now())) {
-                                    message = "<font color = red>Invalid date! </font> Please input valid date.";
-                                    title = "ERROR";
-                                    Methods.showErrorMessage(title, message);
+                                System.out.print("Enter the date of the expense (YYYY-MM-DD): ");
+                                expenseDate = LocalDate.parse(sc.nextLine());
+
+                                LocalDate creationDate = acc.getExpiryDate().minusYears(1).toLocalDate();
+                                LocalDate today = LocalDate.now();
+
+                                boolean invalid = expenseDate.isBefore(creationDate)
+                                        || expenseDate.isAfter(today);
+
+                                if (invalid) {
+                                    Methods.showErrorMessage("ERROR",
+                                            "<font color='red'>Invalid date!</font> Please input valid date.");
                                     continue;
                                 }
                                 break;
@@ -1085,17 +1131,16 @@ public class dbConnection {
                             message = "<font color = red> Insufficient balance! Cannot proceed to add. </font><br> Please top-up your card again.";
                             title = "Transaction Rejected";
                             Methods.showErrorMessage(title, message);
-                            return;
+                            continue;
                         }
-                        System.out.print("Enter the date of the expense (YYYY-MM-DD): ");
-                        LocalDate expenseDate = LocalDate.parse(sc.nextLine());
+                        LocalDate expenseDate;
                         while (true) {
-                            System.out.print("Enter the date of the expense (YYYY-MM-DD): ");
-                            String input = sc.nextLine();
-
                             try {
-                                expenseDate = LocalDate.parse(input);
-                                if (expenseDate.isAfter(LocalDate.now())) {
+                                System.out.print("Enter the date of the expense (YYYY-MM-DD): ");
+                                expenseDate = LocalDate.parse(sc.nextLine());
+
+                                if (expenseDate.isBefore(acc.getExpiryDate().minusYears(1).toLocalDate())
+                                        || expenseDate.isAfter(LocalDate.now())) {
                                     message = "<font color = red>Invalid date! </font> Please input valid date.";
                                     title = "ERROR";
                                     Methods.showErrorMessage(title, message);
@@ -1122,9 +1167,17 @@ public class dbConnection {
                             Methods.showMessage(title, message);
 
                         }
+                        try (PreparedStatement balPs = conn.prepareStatement(
+                                "UPDATE existingmoney em JOIN card c ON em.id = c.existingmoney_id SET em.balance = em.balance - ? WHERE c.id = ?")) {
+                            balPs.setDouble(1, expenseAmount);
+                            balPs.setInt(2, acc.getCardId());
+                            balPs.executeUpdate();
+                        }
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
+                    break;
+                case 0:
                     break;
                 default:
                     message = "<font color='red'>Invalid number. Please try again</font>"
@@ -1134,7 +1187,7 @@ public class dbConnection {
                     break;
             }
 
-            System.out.println("Do you want to add another log? (yes/no)");
+            System.out.print("Do you want to add another log? (yes/no)");
             again = sc.nextLine();
         } while (again.equalsIgnoreCase("yes") || again.equalsIgnoreCase("y"));
 
@@ -1158,8 +1211,7 @@ public class dbConnection {
                 String task = rs.getString("task");
                 double price = rs.getDouble("price");
                 java.sql.Date date = rs.getDate("date");
-                essentials
-                        .add(String.format("%-10s | PHP %-5.2f | %-10s", task, price, date.toString()));
+                essentials.add(String.format("%-10s | PHP %-5.2f | %-10s", task, price, date.toString()));
             }
 
             if (essentials.isEmpty()) {
@@ -1170,7 +1222,7 @@ public class dbConnection {
                 return;
             }
 
-            System.out.println(Account.Color.GREEN + "==========ESSENTIAL EXPENSES==========="
+            System.out.println(Account.Color.GREEN + "\n==========ESSENTIAL EXPENSES==========="
                     + Account.Color.RESET);
             for (String expense : essentials) {
                 System.out.println(expense);
@@ -1210,7 +1262,7 @@ public class dbConnection {
             }
 
             System.out
-                    .println(Account.Color.GREEN + "==========NON-ESSENTIAL EXPENSES==========="
+                    .println(Account.Color.GREEN + "\n==========NON-ESSENTIAL EXPENSES==========="
                             + Account.Color.RESET);
             for (String expense : treats) {
                 System.out.println(expense);
@@ -1362,7 +1414,7 @@ public class dbConnection {
             if (balRs.next()) {
                 balance = balRs.getDouble("balance");
             }
-            if (balance <= 100) {
+            if (balance < 100) {
                 message = "<font color='red'>Your balance is below PHP 100! Please top up your account.</font>"
                         + "<br>Click OK to continue.";
                 title = "WARNING!";
@@ -1379,50 +1431,51 @@ public class dbConnection {
     // view budget allocation
     public boolean viewBudget() {
         if (auth.sessionChecker(acc.getCardNum()) == false) {
-            message = 
-                    "" + "Your session has expired. Please login again."
-                            + "<font color='red'><br>LOGGING OUT...</font>" + "<br>Click OK to continue.";
+            message = "" + "Your session has expired. Please login again."
+                    + "<font color='red'><br>LOGGING OUT...</font>" + "<br>Click OK to continue.";
             title = "WARNING!";
             Methods.showErrorMessage(title, message);
             return false;
         } else {
-
-            int choice;
-            while (true) {
-                try {
-                    System.out.println(Account.Color.VIOLET + Account.Color.BOLD
-                            + "\n~~~~~~~~~~~~~~~~~~~~VIEW BUDGET~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
-                    System.out.println(Account.Color.PURPLE + "1. Essential" + Account.Color.RESET);
-                    System.out.println(Account.Color.PURPLE + "2. Non-Essential" + Account.Color.RESET);
-                    System.out.println("Select from the following options:");
-                    choice = sc.nextInt();
-                    sc.nextLine();
-                    break;
-                } catch (InputMismatchException e) {
-                    sc.nextLine();
-                    message = 
-                            "<font color = 'red'>Invalid input.</font>"
-                                    + " Please enter a number from the following." + "<br>Click OK to continue.";
-                    title = "WARNING!";
-                    Methods.showErrorMessage(title, message);
+            int choice = 0;
+            do {
+                while (true) {
+                    try {
+                        System.out.println(Account.Color.VIOLET + Account.Color.BOLD
+                                + "\n~~~~~~~~~~~~~~~~~~~~VIEW BUDGET~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
+                        System.out.println(Account.Color.PURPLE + "1. Essential" + Account.Color.RESET);
+                        System.out.println(Account.Color.PURPLE + "2. Non-Essential" + Account.Color.RESET);
+                        System.out.println(Account.Color.PURPLE + "0. Back" + Account.Color.RESET);
+                        System.out.print("Select from the following options:");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        break;
+                    } catch (InputMismatchException e) {
+                        sc.nextLine();
+                        message = "<font color = 'red'>Invalid input.</font>"
+                                + " Please enter a number from the following." + "<br>Click OK to continue.";
+                        title = "WARNING!";
+                        Methods.showErrorMessage(title, message);
+                    }
                 }
-            }
 
-            switch (choice) {
-                case 1:
-                    essentialBudget();
-                    break;
-                case 2:
-                    treatsBudget();
-                    break;
-                default:
-                    message = 
-                            "<font color='red'>Invalid number. Please try again</font>"
-                                    + "<br>Click OK to continue.";
-                    title = "WARNING!";
-                    Methods.showErrorMessage(title, message);
-                    break;
-            }
+                switch (choice) {
+                    case 1:
+                        essentialBudget();
+                        break;
+                    case 2:
+                        treatsBudget();
+                        break;
+                    case 0:
+                        return true;
+                    default:
+                        message = "<font color='red'>Invalid number. Please try again</font>"
+                                + "<br>Click OK to continue.";
+                        title = "WARNING!";
+                        Methods.showErrorMessage(title, message);
+                        break;
+                }
+            } while (choice != 0);
 
         }
         return true;
@@ -1438,12 +1491,12 @@ public class dbConnection {
             List<String> budgetAlloc = new ArrayList<>();
             Connection conn = getConnection();
             try (PreparedStatement bal = conn.prepareStatement(
-                    "SELECT balance FROM existingmoney em JOIN card c ON em.id = c.existingmoney_id WHERE card_num = ?")) {
+                    "SELECT deposit FROM existingmoney em JOIN card c ON em.id = c.existingmoney_id WHERE card_num = ?")) {
                 bal.setString(1, acc.getCardNum());
                 ResultSet balRs = bal.executeQuery();
                 double balance = 0;
                 if (balRs.next()) {
-                    balance = balRs.getDouble("balance");
+                    balance = balRs.getDouble("deposit");
                 }
 
                 try (PreparedStatement ps = conn.prepareStatement(
@@ -1461,7 +1514,8 @@ public class dbConnection {
                         if (budget > 0) {
                             percentBudget = (expenses / budget) * 100;
                             if (percentBudget > 100) {
-                                message = "<font color = red> Your expenses exceeds your daily budget! </font>";
+                                message = "<font color = red> Your expenses in " + name
+                                        + " exceeds your daily budget! </font>";
                                 title = "Budget Exceeded";
                                 Methods.showErrorMessage(title, message);
                             }
@@ -1469,7 +1523,8 @@ public class dbConnection {
                         if (balance > 0) {
                             percentBal = (expenses / balance) * 100;
                             if (percentBal > 100) {
-                                message = "<font color = red> Your expenses exceeds your balance! </font>";
+                                message = "<font color = red> Your expenses in " + name
+                                        + " exceeds your balance! </font>";
                                 title = "Budget Exceeded";
                                 Methods.showErrorMessage(title, message);
                             }
@@ -1480,7 +1535,7 @@ public class dbConnection {
                                 name, budget, expenses, String.format("%.2f%%", percentBudget),
                                 String.format("%.2f%%", percentBal)));
                     }
-                    System.out.println(Account.Color.GREEN + "==========ESSENTIAL BUDGET=========="
+                    System.out.println(Account.Color.GREEN + "\n==========ESSENTIAL BUDGET=========="
                             + Account.Color.RESET);
                     System.out.println(
                             "%-15s | %-15s | %-15s | %-15s | %-15s".formatted("Category", "Budget in a day",
@@ -1507,34 +1562,23 @@ public class dbConnection {
             List<String> budgetAlloc = new ArrayList<>();
             Connection conn = getConnection();
             try (PreparedStatement bal = conn.prepareStatement(
-                    "SELECT balance FROM existingmoney em JOIN card c ON em.id = c.existingmoney_id WHERE card_num = ?")) {
+                    "SELECT deposit FROM existingmoney em JOIN card c ON em.id = c.existingmoney_id WHERE card_num = ?")) {
                 bal.setString(1, acc.getCardNum());
                 ResultSet balRs = bal.executeQuery();
                 double balance = 0;
                 if (balRs.next()) {
-                    balance = balRs.getDouble("balance");
+                    balance = balRs.getDouble("deposit");
                 }
 
                 try (PreparedStatement ps = conn.prepareStatement(
-                        "SELECT c.name, c.budget, IFNULL(SUM(e.price), 0) AS total_expenses FROM categories c LEFT JOIN expenses e ON c.id = e.category_id AND e.card_id = ? WHERE c.card_id = ? AND e.status = 'treats' GROUP BY c.id")) {
+                        "SELECT IFNULL(SUM(e.price),0) AS total_expenses FROM expenses e  WHERE e.card_id = ? AND e.status = 'treats'")) {
                     ps.setInt(1, acc.getCardId());
-                    ps.setInt(2, acc.getCardId());
                     ResultSet rs = ps.executeQuery();
 
                     while (rs.next()) {
-                        String name = rs.getString("name");
-                        double budget = rs.getDouble("budget");
                         double expenses = rs.getDouble("total_expenses");
-                        double percentBudget = 0;
                         double percentBal = 0;
-                        if (budget > 0) {
-                            percentBudget = (expenses / budget) * 100;
-                            if (percentBudget > 100) {
-                                message = "<font color = red> Your expenses exceeds your daily budget! </font>";
-                                title = "Budget Exceeded";
-                                Methods.showErrorMessage(title, message);
-                            }
-                        }
+
                         if (balance > 0) {
                             percentBal = (expenses / balance) * 100;
                             if (percentBal > 100) {
@@ -1543,17 +1587,15 @@ public class dbConnection {
                                 Methods.showErrorMessage(title, message);
                             }
                         }
-                        budgetAlloc.add(String.format("%-15s | PHP %-11.2f | PHP %-11.2f | %-16s | %-15s",
-                                name, budget,
-                                String.format("%.2f%%", percentBudget),
-                                String.format("%.2f%%", percentBal)));
+                        budgetAlloc.add(String.format("%-15s | PHP %-11.2f | %-15s", "All expenses",
+                                expenses, String.format("%.2f%%", percentBal)));
                     }
                     System.out.println(
-                            Account.Color.GREEN + "==========NON-ESSENTIAL BUDGET=========="
+                            Account.Color.GREEN + "\n==========NON-ESSENTIAL BUDGET=========="
                                     + Account.Color.RESET);
                     System.out.println(
-                            "%-15s | %-15s | %-15s | %-15s | %-15s".formatted("Category", "Budget in a day",
-                                    "All Expenses", "% used in Budget", "% used in Balance"));
+                            "%-15s | %-15s | %-15s".formatted("Category",
+                                    "Total", "% used in Balance"));
                     for (String alloc : budgetAlloc) {
                         System.out.println(alloc);
                     }
@@ -1567,130 +1609,139 @@ public class dbConnection {
     // edit account details
     public boolean editAccDetails() {
         if (auth.sessionChecker(acc.getCardNum()) == false) {
-            message = 
-                    "" + "Your session has expired. Please login again."
-                            + "<font color='red'><br>LOGGING OUT...</font>" + "<br>Click OK to continue.";
+            message = "" + "Your session has expired. Please login again."
+                    + "<font color='red'><br>LOGGING OUT...</font>" + "<br>Click OK to continue.";
             title = "WARNING!";
             Methods.showErrorMessage(title, message);
             return false;
         } else {
-
-            int choice;
-            while (true) {
-                try {
-                    System.out.println(Account.Color.VIOLET + Account.Color.BOLD
-                            + "\n~~~~~~~~~~~~~~~~~~~~EDIT ACCOUNT DETAILS~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
-                    System.out.println(Account.Color.PURPLE + "1. Edit Name" + Account.Color.RESET);
-                    System.out.println(Account.Color.PURPLE + "2. Edit PIN" + Account.Color.RESET);
-                    System.out.print("Pick from the following: ");
-                    choice = sc.nextInt();
-                    sc.nextLine();// clears buffer
-                    break;
-                } catch (InputMismatchException e) {
-                    message = 
-                            "<font color = 'red'>Invalid input.</font>"
-                                    + " Please enter a number from the following." + "<br>Click OK to continue.";
-                    title = "WARNING!";
-                    Methods.showErrorMessage(title, message);
-                }
-            }
-
-            switch (choice) {
-                case 1:
-                    System.out.print("Enter your new first name: ");
-                    String newFirstName = sc.nextLine();
-                    newFirstName = formatInput(newFirstName);
-                    System.out.print("Enter your new last name: ");
-                    String newLastName = sc.nextLine();
-                    newLastName = formatInput(newLastName);
-
-                    try (Connection conn = getConnection();
-                            PreparedStatement ps = conn.prepareStatement(
-                                    "UPDATE cardholder SET first_name = ?, last_name = ? WHERE card_num = ?")) {
-                        ps.setString(1, newFirstName);
-                        ps.setString(2, newLastName);
-                        ps.setString(3, acc.getCardNum());
-                        int updated = ps.executeUpdate();
-                        if (updated > 0) {
-                            message = 
-                                    "<font color='green'>Name updated successfully!</font>"
-                                            + "<br>Click OK to continue.";
-                            title = "Success";
-                            Methods.showMessage(title, message);
-                                    
-                            acc.setFirstName(newFirstName);
-                            acc.setLastName(newLastName);
-                        } else {
-                            message = 
-                                    "<font color='red'>Failed to update name. Please try again.</font>"
-                                            + "<br>Click OK to continue.";
-                            title = "Error";
-                            Methods.showErrorMessage(title, message);
-                            break;
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+            int choice = 0;
+            do {
+                while (true) {
+                    try {
+                        System.out.println(Account.Color.VIOLET + Account.Color.BOLD
+                                + "\n~~~~~~~~~~~~~~~~~~~~EDIT ACCOUNT DETAILS~~~~~~~~~~~~~~~~~~~~"
+                                + Account.Color.RESET);
+                        System.out.println(Account.Color.PURPLE + "1. Edit Name" + Account.Color.RESET);
+                        System.out.println(Account.Color.PURPLE + "2. Edit PIN" + Account.Color.RESET);
+                        System.out.println(Account.Color.PURPLE + "0. Back" + Account.Color.RESET);
+                        System.out.print("Pick from the following: ");
+                        choice = sc.nextInt();
+                        sc.nextLine();// clears buffer
+                        break;
+                    } catch (InputMismatchException e) {
+                        message = "<font color = 'red'>Invalid input.</font>"
+                                + " Please enter a number from the following." + "<br>Click OK to continue.";
+                        title = "WARNING!";
+                        Methods.showErrorMessage(title, message);
                     }
-                    break;
-                case 2:
-                    while (true) {
-                        System.out.print("\nCreate a 4 digit card pin: ");
-                        String cardPin = sc.nextLine();
-                        if (cardPin.matches("\\d{4}")) {
-                            acc.setCardPin(cardPin);
-                            acc.setHash(Authentication.hashPin(cardPin));
-                            String hash = acc.getHash();
-                            message = 
-                                    "Valid pin. Please remember your pin." + "<br>Click OK to continue.";
-                            title = "SUCCESS!";
-                            Methods.showMessage(title, message);
-                
-                            try (Connection conn = getConnection();
-                                    PreparedStatement ps = conn.prepareStatement(
-                                            "UPDATE cardholder SET card_pin = ?, hash = ? WHERE card_num = ?")) {
-                                ps.setString(1, cardPin);
-                                ps.setString(2, hash);
-                                ps.setString(3, acc.getCardNum());
-                                int updated = ps.executeUpdate();
-                                if (updated > 0) {
-                                    message = 
-                                            "<font color='green'>PIN updated successfully!</font>"
-                                                    + "<br>Click OK to continue.";
-                                    title = "Success";
-                                    Methods.showMessage(title, message);
-                                            
-                                } else {
-                                    message = 
-                                            "<font color='red'>Failed to update PIN. Please try again.</font>"
-                                                    + "<br>Click OK to continue.";
-                                    title = "Error";
-                                    Methods.showErrorMessage(title, message);
-                                    break;
-                                }
-                            } catch (SQLException e) {
-                                e.printStackTrace();
+                }
+
+                switch (choice) {
+                    case 1:
+                        String newFirstName;
+                        String newLastName;
+                        while (true) {
+                            System.out.print("Enter your new first name: ");
+                            newFirstName = sc.nextLine();
+                            newFirstName = formatInput(newFirstName);
+                            if (!newFirstName.trim().isEmpty()) {
+                                break;
                             }
 
-                        } else {
-                            message = 
-                                    "<font color='red'>Invalid pin. Please enter a 4 digit number.</font>"
-                                            + "<br>Click OK to continue.";
-                            title = "WARNING!";
-                            Methods.showErrorMessage(title, message);
-                            continue;
+                        }
+                        while (true) {
+                            System.out.print("Enter your new last name: ");
+                            newLastName = sc.nextLine();
+                            newLastName = formatInput(newLastName);
+                            if (!newLastName.trim().isEmpty()) {
+                                break;
+                            }
+                        }
+
+                        try (Connection conn = getConnection();
+                                PreparedStatement ps = conn.prepareStatement(
+                                        "UPDATE cardholder SET first_name = ?, last_name = ? WHERE card_num = ?")) {
+                            ps.setString(1, newFirstName);
+                            ps.setString(2, newLastName);
+                            ps.setString(3, acc.getCardNum());
+                            int updated = ps.executeUpdate();
+                            if (updated > 0) {
+                                message = "<font color='green'>Name updated successfully!</font>"
+                                        + "<br>Click OK to continue.";
+                                title = "Success";
+                                Methods.showMessage(title, message);
+
+                                acc.setFirstName(newFirstName);
+                                acc.setLastName(newLastName);
+                            } else {
+                                message = "<font color='red'>Failed to update name. Please try again.</font>"
+                                        + "<br>Click OK to continue.";
+                                title = "Error";
+                                Methods.showErrorMessage(title, message);
+                                break;
+                            }
+                        } catch (SQLException e) {
+                            e.printStackTrace();
                         }
                         break;
-                    }
-                    break;
-                default:
-                    message = 
-                            "<font color='red'>Invalid number. Please try again</font>"
-                                    + "<br>Click OK to continue.";
-                    title = "WARNING!";
-                    Methods.showErrorMessage(title, message);
-                    break;
+                    case 2:
+                        while (true) {
+                            System.out.print("\nCreate a 4 digit card pin: ");
+                            String cardPin = sc.nextLine();
+                            if (cardPin.matches("\\d{4}")) {
+                                acc.setCardPin(cardPin);
+                                acc.setHash(Authentication.hashPin(cardPin));
+                                String hash = acc.getHash();
+                                message = "Valid pin. Please remember your pin." + "<br>Click OK to continue.";
+                                title = "SUCCESS!";
+                                Methods.showMessage(title, message);
 
-            }
+                                try (Connection conn = getConnection();
+                                        PreparedStatement ps = conn.prepareStatement(
+                                                "UPDATE cardholder SET card_pin = ?, hash = ? WHERE card_num = ?")) {
+                                    ps.setString(1, cardPin);
+                                    ps.setString(2, hash);
+                                    ps.setString(3, acc.getCardNum());
+                                    int updated = ps.executeUpdate();
+                                    if (updated > 0) {
+                                        message = "<font color='green'>PIN updated successfully!</font>"
+                                                + "<br>Click OK to continue.";
+                                        title = "Success";
+                                        Methods.showMessage(title, message);
+
+                                    } else {
+                                        message = "<font color='red'>Failed to update PIN. Please try again.</font>"
+                                                + "<br>Click OK to continue.";
+                                        title = "Error";
+                                        Methods.showErrorMessage(title, message);
+                                        break;
+                                    }
+                                } catch (SQLException e) {
+                                    e.printStackTrace();
+                                }
+
+                            } else {
+                                message = "<font color='red'>Invalid pin. Please enter a 4 digit number.</font>"
+                                        + "<br>Click OK to continue.";
+                                title = "WARNING!";
+                                Methods.showErrorMessage(title, message);
+                                continue;
+                            }
+                            break;
+                        }
+                        break;
+                    case 0:
+                        return true;
+                    default:
+                        message = "<font color='red'>Invalid number. Please try again</font>"
+                                + "<br>Click OK to continue.";
+                        title = "WARNING!";
+                        Methods.showErrorMessage(title, message);
+                        break;
+
+                }
+            } while (choice != 0);
         }
         return true;
     }
@@ -1698,9 +1749,8 @@ public class dbConnection {
     // deposit cash
     public boolean depositCash() {
         if (auth.sessionChecker(acc.getCardNum()) == false) {
-            message = 
-                    "" + "Your session has expired. Please login again."
-                            + "<font color='red'><br>LOGGING OUT...</font>" + "<br>Click OK to continue.";
+            message = "" + "Your session has expired. Please login again."
+                    + "<font color='red'><br>LOGGING OUT...</font>" + "<br>Click OK to continue.";
             title = "WARNING!";
             Methods.showErrorMessage(title, message);
             return false;
@@ -1712,14 +1762,13 @@ public class dbConnection {
             sc.nextLine(); // clear buffer
             try (Connection conn = getConnection();
                     PreparedStatement ps = conn.prepareStatement(
-                            "UPDATE existingmoney em JOIN card c ON em.id = c.existingmoney_id SET em.balance = em.balance + ?, em.deposit = ? WHERE c.card_num = ?")) {
+                            "UPDATE existingmoney em JOIN card c ON em.id = c.existingmoney_id SET em.balance = em.balance + ?, em.deposit = em.deposit + ? WHERE c.card_num = ?")) {
                 ps.setInt(1, amount);
                 ps.setInt(2, amount);
                 ps.setString(3, acc.getCardNum());
                 ps.executeUpdate();
-                message = 
-                        "<font color='green'>Amount PHP " + amount + " deposited successfully!</font>"
-                                + "<br>Click OK to continue.";
+                message = "<font color='green'>Amount PHP " + amount + " deposited successfully!</font>"
+                        + "<br>Click OK to continue.";
                 title = "Success";
                 Methods.showMessage(title, message);
 
@@ -1733,9 +1782,8 @@ public class dbConnection {
                     }
 
                     if (balance < 100) {
-                        message = 
-                                "<font color='red'>Your balance is still below PHP 100! Please top up your account.</font>"
-                                        + "<br>Click OK to continue.";
+                        message = "<font color='red'>Your balance is still below PHP 100! Please top up your account.</font>"
+                                + "<br>Click OK to continue.";
                         title = "WARNING!";
                         Methods.showErrorMessage(title, message);
                     }
@@ -1747,6 +1795,73 @@ public class dbConnection {
             }
         }
         return true;
+    }
+
+    // edit financial log
+    public void editFinLog(String cardNum) {
+        if (auth.sessionChecker(acc.getCardNum()) == false) {
+            message = "" + "Your session has expired. Please login again."
+                    + "<font color='red'><br>LOGGING OUT...</font>" + "<br>Click OK to continue.";
+            title = "WARNING!";
+            Methods.showErrorMessage(title, message);
+            return;
+        } else {
+            int choice = 0;
+            do {
+                while (true) {
+                    try {
+                        System.out.println(Account.Color.GREEN + Account.Color.BOLD
+                                + "==========EDIT FINANCIAL LOG==========" + Account.Color.RESET);
+                        System.out.println("1. Essentials");
+                        System.out.println("2. Non-essentials");
+                        System.out.println("0. Back");
+                        System.out.println("ALL LOGS: ");
+                        System.out.print("Select category where you want to edit: ");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        break;
+                    } catch (InputMismatchException e) {
+                        message = "<font color = red> Invalid input! </font> Input a number from the following." +
+                                "<br>Click OK to continue.";
+                        title = "WARNING!";
+                        Methods.showErrorMessage(title, message);
+                    }
+                }
+
+                int logEntry;
+                String selectedLog;
+                switch (choice) {
+                    case 1:
+                        System.out.println(Account.Color.RED + "ESSENTIAL LOGS" + Account.Color.RESET);
+                        for (int i = 0; i < essentials.size(); i++) {
+                            System.out.println((i + 1) + ". " + essentials.get(i));
+                        }
+                        System.out.print("Select log you want to edit: ");
+                        logEntry = sc.nextInt();
+                        sc.nextLine(); // clear buffer
+                        if (logEntry < 1 || logEntry > essentials.size()) {
+                            message = "<font color='red'>Invalid category choice! Please try again.</font>"
+                                    + "<br>Click OK to continue.";
+                            title = "WARNING!";
+                            Methods.showErrorMessage(title, message);
+                            break;
+                        }
+                        selectedLog = essentials.get(logEntry - 1);
+                        break;
+                    case 2:
+                        System.out.println(Account.Color.RED + "NON-ESSENTIAL LOGS" + Account.Color.RESET);
+                        for (int i = 0; i < treats.size(); i++) {
+                            System.out.println((i + 1) + ". " + treats.get(i));
+                        }
+                        break;
+                    case 0:
+                        break;
+                    default:
+
+                }
+
+            } while (choice != 0);
+        }
     }
 
 }

@@ -37,7 +37,7 @@ public class Methods {
     }
 
     // MAIN MENU SWITCH
-    public void MainMenu() {
+    public boolean MainMenu() {
 
         boolean inMainMenu = false;
         db.AccountDetails();
@@ -45,7 +45,7 @@ public class Methods {
         while (!inMainMenu) {
             int choice;
             while (true) {
-                try{
+                try {
                     System.out.println(Account.Color.YELLOW + Account.Color.BOLD + "\n==========MAIN MENU=========="
                             + Account.Color.RESET);
                     System.out.println(Account.Color.PURPLE + "1. View Balance" + Account.Color.RESET);
@@ -61,12 +61,11 @@ public class Methods {
                     break;
                 } catch (InputMismatchException e) {
                     String title = "ERROR!";
-                    String message = "<html><font color = 'red'>Invalid input.</font></html>"
-                            + " Please enter a number from the following." + "\nClick OK to continue";
+                    String message = "<html><font color = 'red'>Invalid input.</font>"
+                            + " Please enter a number from the following." + "<br>Click OK to continue";
                     showErrorMessage(title, message);
-                    continue;
+                    sc.nextLine();
                 }
-                
 
             }
             boolean loggedIn = false;
@@ -75,19 +74,24 @@ public class Methods {
                     while (true) {
                         loggedIn = db.viewBalance();
                         if (!loggedIn) {
-                            return;
+                            return false;
                         }
                         break;
                     }
                     break;
                 case 2:
-                    if (db.balanceChecker() == false) {
-                        break;
+                    db.balanceChecker();
+                    if (!db.expensesChecker(Account.status.ESSENTIALS.name())
+                            && !db.expensesChecker(Account.status.TREATS.name())) {
+                        String message = "<font color='red'><br>NO financial record found!</font>"
+                                + "<br>Click OK to continue.";
+                        String title = "WARNING!";
+                        Methods.showErrorMessage(title, message);
                     } else {
                         while (true) {
                             loggedIn = db.viewBudget();
                             if (!loggedIn) {
-                                return;
+                                return false;
                             }
                             break;
                         }
@@ -97,7 +101,7 @@ public class Methods {
                     while (true) {
                         loggedIn = db.depositCash();
                         if (!loggedIn) {
-                            return;
+                            return false;
                         }
                         break;
                     }
@@ -106,7 +110,7 @@ public class Methods {
                     while (true) {
                         loggedIn = db.FinancialLog();
                         if (!loggedIn) {
-                            return;
+                            return false;
                         }
                         break;
                     }
@@ -115,7 +119,7 @@ public class Methods {
                     while (true) {
                         loggedIn = db.addCategFlow();
                         if (!loggedIn) {
-                            return;
+                            return false;
                         }
                         break;
                     }
@@ -124,7 +128,7 @@ public class Methods {
                     while (true) {
                         loggedIn = db.editAccDetails();
                         if (!loggedIn) {
-                            return;
+                            return false;
                         }
                         break;
                     }
@@ -133,13 +137,14 @@ public class Methods {
                     inMainMenu = true;
                     break;
                 default:
-                    String message = "<html><font color='red'>Invalid number. Please try again</font></html>"
-                                    + "\nClick OK to continue";
+                    String message = "<html><font color='red'>Invalid number. Please try again</font>"
+                            + "<br>Click OK to continue";
                     String title = "Warning";
                     showErrorMessage(title, message);
                     break;
             }
         }
+        return false;
     }
 
     // system details
@@ -150,26 +155,29 @@ public class Methods {
         String welcomeTitle = "WELCOME!";
         scrollMessage(welcomeTitle, welcome);
 
-
-        String intro = "<html><div style = 'width:250px; font-size: 13px;'><font color = #8a3500><b>Budget Buddy </b></font> is a simple budgeting system made for students to help them <font color = red>manage their money </font> better. " +
-                        "It works like an ATM-style app where users can <font color = blue><b>check their balance, add money, and record their daily spending</b></font>. " +
-                        "It also shows how much of their balance has been spent so they can easily see <font color = red>where their money goes</font>.<br>" +
-                        "The system helps students track their expenses daily, weekly, or monthly, so they can avoid overspending and learn how to budget wisely.</div></html>";
+        String intro = "<html><div style = 'width:250px; font-size: 13px;'><font color = #8a3500><b>Budget Buddy </b></font> is a simple budgeting system made for students to help them <font color = red>manage their money </font> better. "
+                +
+                "It works like an ATM-style app where users can <font color = blue><b>check their balance, add money, and record their daily spending</b></font>. "
+                +
+                "It also shows how much of their balance has been spent so they can easily see <font color = red>where their money goes</font>.<br>"
+                +
+                "The system helps students track their expenses daily, weekly, or monthly, so they can avoid overspending and learn how to budget wisely.</div></html>";
         String introTitle = "What is it all about?";
         scrollMessage(introTitle, intro);
 
-        String features = "<html><div style = 'font-size: 12px;'><font color=blue><b>Budget Buddy Features:</b></font><br>" +
-                        "- View Balance <br>" +
-                        "- View Expenses Percent on Balance <br>" +
-                        "- Deposit Money <br>" +
-                        "- Add, View, and Filter Financial Logs <br>" +
-                        "- Separate Essential to Non-Essential Expenses <br>" +
+        String features = "<html><div style = 'font-size: 12px;'><font color=blue><b>Budget Buddy Features:</b></font><br>"
+                +
+                "- View Balance <br>" +
+                "- View Expenses Percent on Balance <br>" +
+                "- Deposit Money <br>" +
+                "- Add, View, and Filter Financial Logs <br>" +
+                "- Separate Essential to Non-Essential Expenses <br>" +
                 "- Edit Card Details </div></html>";
         String featuresTitle = "FEATURES";
         scrollMessage(featuresTitle, features);
 
     }
-    
+
     public static void scrollMessage(String title, String message) {
         JTextPane textPane = new JTextPane();
         textPane.setContentType("text/html");
@@ -194,9 +202,10 @@ public class Methods {
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
     }
-    
+
     public static void showErrorMessage(String title, String message) {
-        String messageStyled = "<html><div style='font-size:12px; font-family:Verdana; font-weight:bold;'>" + message + "</div></html>";
+        String messageStyled = "<html><div style='font-size:12px; font-family:Verdana; font-weight:bold;'>" + message
+                + "</div></html>";
         JOptionPane pane = new JOptionPane(messageStyled, JOptionPane.ERROR_MESSAGE);
         JDialog dialog = pane.createDialog(title);
 
@@ -207,8 +216,10 @@ public class Methods {
     }
 
     public static void showMessage(String title, String message) {
-        String messageStyled = "<html><div style = 'font-size:12px; font-family:Georgia; font-weight: bold;'>" + message + "</div></html>";
-        JOptionPane pane = new JOptionPane(messageStyled, JOptionPane.INFORMATION_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+        String messageStyled = "<html><div style = 'font-size:12px; font-family:Georgia; font-weight: bold;'>" + message
+                + "</div></html>";
+        JOptionPane pane = new JOptionPane(messageStyled, JOptionPane.INFORMATION_MESSAGE,
+                JOptionPane.OK_CANCEL_OPTION);
         JDialog dialog = pane.createDialog(title);
 
         dialog.setSize(300, 200);
@@ -217,5 +228,4 @@ public class Methods {
         dialog.setVisible(true);
     }
 
-    
 }
