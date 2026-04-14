@@ -17,7 +17,6 @@ public class dbConnection {
     }
 
     Object[] options = { "OK", "CANCEL" };
-    List<String> treats = new ArrayList<>();
     Scanner sc = new Scanner(System.in);
     String title;
     String message;
@@ -902,8 +901,8 @@ public class dbConnection {
                         addFinLog();
                         break;
                     case 5:
-                            editFinLog(acc.getCardNum());
-                            break;
+                        editFinLog(acc.getCardNum());
+                        break;
                     case 0:
                         return true;
                     default:
@@ -1815,7 +1814,6 @@ public class dbConnection {
                         System.out.println("1. Essentials");
                         System.out.println("2. Non-essentials");
                         System.out.println("0. Back");
-                        System.out.println("ALL LOGS: ");
                         System.out.print("Select category where you want to edit: ");
                         choice = sc.nextInt();
                         sc.nextLine();
@@ -1828,30 +1826,85 @@ public class dbConnection {
                     }
                 }
 
-                int logEntry;
-                String selectedLog;
+                int logId;
                 switch (choice) {
                     case 1:
-                        System.out.println(Account.Color.RED + "ESSENTIAL LOGS" + Account.Color.RESET);
-                        for (int i = 0; i < essentials.size(); i++) {
-                            System.out.println((i + 1) + ". " + essentials.get(i));
+                        try (Connection conn = getConnection();
+                                PreparedStatement st = conn.prepareStatement(
+                                        "SELECT id, task, price, date FROM expenses WHERE card_id = ? and status = 'essentials'")) {
+                            st.setInt(1, acc.getCardId());
+                            ResultSet rs = st.executeQuery();
+
+                            List<String> essentials = new ArrayList<>();
+                            while (rs.next()) {
+                                int id = rs.getInt("id");
+                                String name = rs.getString("task");
+                                double price = rs.getDouble("price");
+                                LocalDate date = rs.getDate("date").toLocalDate();
+                                essentials.add(String.format("%-5s | %-10s | PHP %-5.2f | %-10s", id, name, price,
+                                        date.toString()));
+                            }
+
+                            if (essentials.isEmpty()) {
+                                message = "<font color = red> No financial record found. </font> <br> Click OK to continue.";
+                                title = "ERROR!";
+                                Methods.showErrorMessage(title, message);
+                                return;
+                            }
+
+                            System.out.println(Account.Color.RED + "\nESSENTIAL LOGS" + Account.Color.RESET);
+                            System.out
+                                    .println("%-5s | %-11s | %-10s | %-10s".formatted("ID", "Name", "Amount", "Date"));
+                            for (String expense : essentials) {
+                                System.out.println(expense);
+                            }
+                            System.out.print("Enter ID you want to edit: ");
+                            logId = sc.nextInt();
+                            sc.nextLine(); // clear buffer
+                            newFinLog(logId);
+
+                        } catch (SQLException e) {
+                            e.printStackTrace();
                         }
-                        System.out.print("Select log you want to edit: ");
-                        logEntry = sc.nextInt();
-                        sc.nextLine(); // clear buffer
-                        if (logEntry < 1 || logEntry > essentials.size()) {
-                            message = "<font color='red'>Invalid category choice! Please try again.</font>"
-                                    + "<br>Click OK to continue.";
-                            title = "WARNING!";
-                            Methods.showErrorMessage(title, message);
-                            break;
-                        }
-                        selectedLog = essentials.get(logEntry - 1);
+
                         break;
                     case 2:
-                        System.out.println(Account.Color.RED + "NON-ESSENTIAL LOGS" + Account.Color.RESET);
-                        for (int i = 0; i < treats.size(); i++) {
-                            System.out.println((i + 1) + ". " + treats.get(i));
+                        try (Connection conn = getConnection();
+                                PreparedStatement st = conn.prepareStatement(
+                                        "SELECT id, task, price, date FROM expenses WHERE card_id = ? and status = 'treats'")) {
+                            st.setInt(1, acc.getCardId());
+                            ResultSet rs = st.executeQuery();
+
+                            List<String> treats = new ArrayList<>();
+                            while (rs.next()) {
+                                int id = rs.getInt("id");
+                                String name = rs.getString("task");
+                                double price = rs.getDouble("price");
+                                LocalDate date = rs.getDate("date").toLocalDate();
+                                treats.add(String.format("%-5s | %-10s | PHP %-5.2f | %-10s", id, name, price,
+                                        date.toString()));
+                            }
+
+                            if (treats.isEmpty()) {
+                                message = "<font color = red> No financial record found. </font> <br> Click OK to continue.";
+                                title = "ERROR!";
+                                Methods.showErrorMessage(title, message);
+                                return;
+                            }
+
+                            System.out.println(Account.Color.RED + "\nNON-ESSENTIAL  LOGS" + Account.Color.RESET);
+                            System.out
+                                    .println("%-5s | %-11s | %-10s | %-10s".formatted("ID", "Name", "Amount", "Date"));
+                            for (String expense : treats) {
+                                System.out.println(expense);
+                            }
+                            System.out.print("Enter ID you want to edit: ");
+                            logId = sc.nextInt();
+                            sc.nextLine(); // clear buffer
+                            newFinLog(logId);
+
+                        } catch (SQLException e) {
+                            e.printStackTrace();
                         }
                         break;
                     case 0:
@@ -1861,6 +1914,90 @@ public class dbConnection {
                 }
 
             } while (choice != 0);
+        }
+    }
+
+    // new financial log
+    public void newFinLog(int id) {
+        Connection conn = getConnection();
+        String newName;
+        double newAmount;
+        LocalDate newDate;
+
+        System.out.print("Enter new name of the expense: ");
+        newName = sc.nextLine();
+        newName = formatInput(newName);
+        while (true) {
+            try {
+                System.out.print("Enter the amount of the expense: ");
+                newAmount = sc.nextDouble();
+                sc.nextLine(); // clear buffer
+                break;
+            } catch (InputMismatchException e) {
+                sc.nextLine();
+                message = "<font color = 'red'>Invalid input.</font>"
+                        + " Please enter a number." + "<br>Click OK to continue.";
+                title = "WARNING!";
+                Methods.showErrorMessage(title, message);
+            }
+        }
+
+        try (PreparedStatement st = conn.prepareStatement(
+                        "SELECT balance FROM existingmoney em JOIN card c ON em.id = c.existingmoney_id WHERE c.id = ?")) {
+            st.setInt(1, acc.getCardId());
+            ResultSet balRs = st.executeQuery();
+            double balance = 0;
+            if (balRs.next()) {
+                balance = balRs.getDouble("balance");
+
+            }
+            if (newAmount > balance) {
+                message = "<font color = red> Insufficient balance! Cannot proceed to add. </font><br> Please top-up your card again.";
+                title = "Transaction Rejected";
+                Methods.showErrorMessage(title, message);
+                return;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        while (true) {
+            try {
+                System.out.print("Enter the date of the expense (YYYY-MM-DD): ");
+                newDate = LocalDate.parse(sc.nextLine());
+
+                LocalDate creationDate = acc.getExpiryDate().minusYears(1).toLocalDate();
+                LocalDate today = LocalDate.now();
+
+                boolean invalid = newDate.isBefore(creationDate)
+                        || newDate.isAfter(today);
+
+                if (invalid) {
+                    Methods.showErrorMessage("ERROR",
+                            "<font color='red'>Invalid date!</font> Please input valid date.");
+                    continue;
+                }
+                break;
+            } catch (DateTimeParseException e) {
+                message = "<font color = red>Invalid format! </font> Please use YYYY-MM-DD (e.g., 2026-01-31).";
+                title = "ERROR";
+                Methods.showErrorMessage(title, message);
+            }
+
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement("UPDATE expenses SET task = ?, price = ?, date = ? WHERE id = ?")) {
+            ps.setString(1, newName);
+            ps.setDouble(2, newAmount);
+            ps.setDate(3, java.sql.Date.valueOf(newDate));
+            ps.setInt(4, id);
+            ps.executeUpdate();
+            message = "<font color='green'>Log updated successfully!</font>"
+                    + "<br>Click OK to continue.";
+            title = "Success";
+            Methods.showMessage(title, message);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
