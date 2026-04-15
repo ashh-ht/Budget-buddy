@@ -118,7 +118,9 @@ public class dbConnection {
                             "Your card has been expired. Do you want to renew your card?", "Choose one",
                             JOptionPane.YES_NO_OPTION);
                     if (choice == JOptionPane.YES_OPTION) {
-                        System.out.println("\nRenewing your card.");
+                        message = "Renewing your card.";
+                        title = "RENEW";
+                        Methods.showMessage(title, message);
                         renewCard(cardNum);
                     } else if (choice == JOptionPane.NO_OPTION) {
                         try {
@@ -343,7 +345,7 @@ public class dbConnection {
         LocalDateTime date = LocalDateTime.now(); // get the time and date when the user inputted smth
         LocalDateTime expiryDate = date.plusYears(1); // add 1 yr for expiry date
         acc.setExpiryDate(expiryDate);
-        message = "Your expiry date is: <font color = #029a09" + expiryDate.getMonth() + " "
+        message = "Your expiry date is: <font color = #029a09>" + expiryDate.getMonth() + " "
                 + expiryDate.getDayOfMonth() + ", "
                 + expiryDate.getYear() + "</font>";
         title = "CARD EXPIRY DATE";
@@ -851,6 +853,7 @@ public class dbConnection {
             return false;
         } else {
             int choice = 0;
+            int dec = 0;
             do {
 
                 while (true) {
@@ -880,20 +883,34 @@ public class dbConnection {
                 switch (choice) {
                     case 1:
                         if (!expensesChecker(Account.status.ESSENTIALS.name())) {
-                            message = "<font color='red'><br>NO financial record found!</font>"
-                                    + "<br>Click OK to continue.";
-                            title = "WARNING!";
-                            Methods.showErrorMessage(title, message);
+                            dec = JOptionPane.showConfirmDialog(null,
+                                    "<html><div style = 'font-family:Georgia; font-size: 12px;'><font color = red>NO financial record found!</font>"
+                                            +
+                                            "<br> Do you want to add a log?</div></html>",
+                                    "WARNING!", JOptionPane.YES_NO_OPTION);
+                            if (dec == JOptionPane.YES_OPTION) {
+                                addFinLog();
+                                continue;
+                            } else {
+                                break;
+                            }
                         } else {
                             viewEssential();
                         }
                         continue;
                     case 2:
                         if (!expensesChecker(Account.status.TREATS.name())) {
-                            message = "<font color='red'><br>NO financial record found!</font>"
-                                    + "<br>Click OK to continue.";
-                            title = "WARNING!";
-                            Methods.showErrorMessage(title, message);
+                            dec = JOptionPane.showConfirmDialog(null,
+                                    "<html><div style = 'font-family:Georgia; font-size: 12px;'><font color = red>NO financial record found!</font>"
+                                            +
+                                            "<br> Do you want to add a log?</div></html>",
+                                    "WARNING!", JOptionPane.YES_NO_OPTION);
+                            if (dec == JOptionPane.YES_OPTION) {
+                                addFinLog();
+                                continue;
+                            } else {
+                                break;
+                            }
                         } else {
                             viewTreats();
                         }
@@ -901,10 +918,17 @@ public class dbConnection {
                     case 3:
                         if (!expensesChecker(Account.status.ESSENTIALS.name())
                                 && !expensesChecker(Account.status.TREATS.name())) {
-                            message = "<font color='red'><br>NO financial record found!</font>"
-                                    + "<br>Click OK to continue.";
-                            title = "WARNING!";
-                            Methods.showErrorMessage(title, message);
+                            dec = JOptionPane.showConfirmDialog(null,
+                                    "<html><div style = 'font-family:Georgia; font-size: 12px;'><font color = red>NO financial record found!</font>"
+                                            +
+                                            "<br> Do you want to add a log?</div></html>",
+                                    "WARNING!", JOptionPane.YES_NO_OPTION);
+                            if (dec == JOptionPane.YES_OPTION) {
+                                addFinLog();
+                                continue;
+                            } else {
+                                break;
+                            }
                         } else {
                             int filterChoice = 0;
                             do {
@@ -2132,7 +2156,7 @@ public class dbConnection {
                 ps.setDate(3, java.sql.Date.valueOf(newDate));
                 ps.setInt(4, id);
                 ps.executeUpdate();
-                
+
                 if (newAmount > (balance + price)) {
                     System.out.println(newAmount + " llala" + balance + price);
                     conn.rollback();
