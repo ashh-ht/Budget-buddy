@@ -4,7 +4,6 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.UUID;
-import javax.swing.JOptionPane;
 
 public class Authentication {
    Object[] options = new Object[] { "OK", "CANCEL" };
@@ -42,15 +41,17 @@ public class Authentication {
       LocalDateTime expiry = now.plusMinutes(30L);
       Token token = new Token(user, tokenString, now, expiry);
       storeToken.put(user, token);
+      String stdExpiry = Methods.timeFormatter(expiry);
+      String stdNow = Methods.timeFormatter(now);
       String message =
             "<html>" +
                "Login Time: <font color='#00a500'>" +
                now.getMonth() + " " + now.getDayOfMonth() + ", " + now.getYear() + " " +
-               now.getHour() + ":" + now.getMinute() +
+               stdNow +
                "</font><br><br>" +
                "Your session will expire in: <font color='#980202'>" +
                expiry.getMonth() + " " + expiry.getDayOfMonth() + ", " + expiry.getYear() + " " +
-               expiry.getHour() + ":" + expiry.getMinute() +
+               stdExpiry +
                "</font>" +
                   "</html>";
       String title = "SESSION";

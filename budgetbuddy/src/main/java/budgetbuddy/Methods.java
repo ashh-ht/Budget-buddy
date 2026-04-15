@@ -2,6 +2,9 @@ package Budgetbuddy;
 
 import java.util.*;
 import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import javax.swing.*;
 
 public class Methods {
@@ -34,6 +37,12 @@ public class Methods {
         System.out.print(randomNum[randomIndex]);
         cardNum += randomNum[randomIndex];
         return cardNum;
+    }
+
+    public static String timeFormatter(LocalDateTime time) {
+        DateTimeFormatter standardFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+        String standardTime = time.format(standardFormatter);
+        return standardTime;
     }
 
     // MAIN MENU SWITCH
@@ -170,7 +179,7 @@ public class Methods {
                 "- View Balance <br>" +
                 "- View Expenses Percent on Balance <br>" +
                 "- Deposit Money <br>" +
-                "- Add, View, and Filter Financial Logs <br>" +
+                "- Add, View, Filter, and Edit Financial Logs <br>" +
                 "- Separate Essential to Non-Essential Expenses <br>" +
                 "- Edit Card Details </div></html>";
         String featuresTitle = "FEATURES";

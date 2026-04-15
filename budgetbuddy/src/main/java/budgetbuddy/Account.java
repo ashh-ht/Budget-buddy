@@ -6,7 +6,6 @@ public class Account {
     private String firstName;
     private String lastName;
     private String cardNum;
-    private String cardPin;
     private int cardId;
     private LocalDateTime expiryDate;
     private String hash;
@@ -22,10 +21,6 @@ public class Account {
 
     public String getCardNum() {
         return this.cardNum;
-    }
-
-    public String getCardPin() {
-        return this.cardPin;
     }
 
     public LocalDateTime getExpiryDate() {
@@ -51,10 +46,6 @@ public class Account {
 
     public void setCardNum(String cardNum) {
         this.cardNum = cardNum;
-    }
-
-    public void setCardPin(String cardPin) {
-        this.cardPin = cardPin;
     }
 
     public void setExpiryDate(LocalDateTime expiryDate) {
