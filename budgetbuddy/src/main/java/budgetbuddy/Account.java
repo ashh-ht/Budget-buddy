@@ -6,7 +6,7 @@ public class Account {
     private String firstName;
     private String lastName;
     private String cardNum;
-    private String cardPin;
+    private int cardId;
     private LocalDateTime expiryDate;
     private String hash;
 
@@ -23,16 +23,16 @@ public class Account {
         return this.cardNum;
     }
 
-    public String getCardPin() {
-        return this.cardPin;
-    }
-
     public LocalDateTime getExpiryDate() {
         return this.expiryDate;
     }
 
     public String getHash() {
         return this.hash;
+    }
+    
+    public int getCardId() {
+        return this.cardId;
     }
 
     // setters
@@ -48,10 +48,6 @@ public class Account {
         this.cardNum = cardNum;
     }
 
-    public void setCardPin(String cardPin) {
-        this.cardPin = cardPin;
-    }
-
     public void setExpiryDate(LocalDateTime expiryDate) {
         this.expiryDate = expiryDate;
     }
@@ -59,6 +55,10 @@ public class Account {
     public void setHash(String hash) {
         this.hash = hash;
     }
+
+    public void setCardId(int cardId) {
+        this.cardId = cardId;
+    }                           
 
     class Color {
         public static final String RESET = "\u001B[0m";
@@ -70,5 +70,10 @@ public class Account {
         public static final String CYAN = "\u001B[36m";
         public static final String BOLD = "\u001B[1m";
         public static final String VIOLET = "\u001B[38;5;129m";
+    }
+
+    public enum status {
+        ESSENTIALS,
+        TREATS
     }
 }

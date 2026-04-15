@@ -4,8 +4,6 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.UUID;
-import javax.swing.Icon;
-import javax.swing.JOptionPane;
 
 public class Authentication {
    Object[] options = new Object[] { "OK", "CANCEL" };
@@ -43,17 +41,21 @@ public class Authentication {
       LocalDateTime expiry = now.plusMinutes(30L);
       Token token = new Token(user, tokenString, now, expiry);
       storeToken.put(user, token);
-      JOptionPane.showMessageDialog(null,
+      String stdExpiry = Methods.timeFormatter(expiry);
+      String stdNow = Methods.timeFormatter(now);
+      String message =
             "<html>" +
                "Login Time: <font color='#00a500'>" +
                now.getMonth() + " " + now.getDayOfMonth() + ", " + now.getYear() + " " +
-               now.getHour() + ":" + now.getMinute() +
+               stdNow +
                "</font><br><br>" +
                "Your session will expire in: <font color='#980202'>" +
                expiry.getMonth() + " " + expiry.getDayOfMonth() + ", " + expiry.getYear() + " " +
-               expiry.getHour() + ":" + expiry.getMinute() +
+               stdExpiry +
                "</font>" +
-            "</html>");
+                  "</html>";
+      String title = "SESSION";
+      Methods.showMessage(title, message);
       return tokenString;
    }
 
@@ -64,9 +66,9 @@ public class Authentication {
    public boolean sessionChecker(String user) {
       Token token = storeToken.get(user);
       if (token == null) {
-         JOptionPane.showOptionDialog(null, "<html><font color='red'>No token.</font></html>\nClick OK to continue",
-               "WARNING", -1, 2, (Icon) null,
-               this.options, this.options[0]);
+         String message = "<html><font color='red'>No token.</font></html>\nClick OK to continue";
+         String title = "WARNING";
+         Methods.showErrorMessage(title, message);
          return false;
       } else if (LocalDateTime.now().isAfter(token.getExpiryTime())) {
          storeToken.remove(token.getToken());
@@ -81,6 +83,9 @@ public class Authentication {
    }
 
    public static boolean checkPin(String inputPin, String storedHash) {
+      if (storedHash == null || inputPin == null) {
+         return false;
+      }else
       return BCrypt.checkpw(inputPin, storedHash);
    }
 }
