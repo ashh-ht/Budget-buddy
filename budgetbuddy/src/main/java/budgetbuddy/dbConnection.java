@@ -718,8 +718,9 @@ public class dbConnection {
                 continue;
             }
             // check if categ alr exists
-            try (PreparedStatement ps = conn.prepareStatement("SELECT name FROM categories WHERE name = ?")) {
+            try (PreparedStatement ps = conn.prepareStatement("SELECT name FROM categories WHERE name = ? AND card_id = ?")) {
                 ps.setString(1, category);
+                ps.setInt(2, acc.getCardId());
                 ResultSet rs = ps.executeQuery();
 
                 if (rs.next()) {
@@ -831,7 +832,7 @@ public class dbConnection {
                             + "\n~~~~~~~~~~~~~~~~~~~~ADD BUDGET CATEGORY~~~~~~~~~~~~~~~~~~~~" + Account.Color.RESET);
                     addCateg(acc.getCardNum());
                 }
-                System.out.println("Do you want to add another category? (yes/no)");
+                System.out.print("Do you want to add another category? (yes/no) ");
                 String choice = sc.nextLine();
 
                 if (!choice.equalsIgnoreCase("yes") || !choice.equalsIgnoreCase("y")) {
@@ -1294,7 +1295,7 @@ public class dbConnection {
                     break;
             }
 
-            System.out.print("Do you want to add another log? (yes/no)");
+            System.out.print("\nDo you want to add another log? (yes/no) ");
             again = sc.nextLine();
         } while (again.equalsIgnoreCase("yes") || again.equalsIgnoreCase("y"));
 
@@ -2130,8 +2131,6 @@ public class dbConnection {
             ResultSet balRs = st.executeQuery();
             if (balRs.next()) {
                 balance = balRs.getDouble("balance");
-                System.out.println(balance);
-
             }
 
         } catch (SQLException e) {
@@ -2143,7 +2142,6 @@ public class dbConnection {
                     .prepareStatement("UPDATE expenses SET task = ?, price = ?, date = ? WHERE id = ?");
                     PreparedStatement ps1 = conn.prepareStatement(
                             "UPDATE existingmoney SET deposit = ?, balance = ? WHERE id = (SELECT existingmoney_id FROM card WHERE card_num = ?)")) {
-                System.out.println(balance);
 
                 double newDeposit = deposit + price - newAmount;
                 double newBalance = balance + price - newAmount;
