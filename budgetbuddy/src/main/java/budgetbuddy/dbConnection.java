@@ -345,7 +345,7 @@ public class dbConnection {
         LocalDateTime date = LocalDateTime.now(); // get the time and date when the user inputted smth
         LocalDateTime expiryDate = date.plusYears(1); // add 1 yr for expiry date
         acc.setExpiryDate(expiryDate);
-        message = "Your expiry date is: <font color = #029a09>" + expiryDate.getMonth() + " "
+        message = "Your card will expire in: <font color = #029a09>" + expiryDate.getMonth() + " "
                 + expiryDate.getDayOfMonth() + ", "
                 + expiryDate.getYear() + "</font>";
         title = "CARD EXPIRY DATE";

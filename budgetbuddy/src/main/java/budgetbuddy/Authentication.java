@@ -52,8 +52,7 @@ public class Authentication {
                "Your session will expire in: <font color='#980202'>" +
                expiry.getMonth() + " " + expiry.getDayOfMonth() + ", " + expiry.getYear() + " " +
                stdExpiry +
-               "</font>" +
-                  "</html>";
+               "</font>";
       String title = "SESSION";
       Methods.showMessage(title, message);
       return tokenString;
